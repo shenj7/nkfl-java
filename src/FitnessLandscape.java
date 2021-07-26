@@ -12,6 +12,11 @@ public class FitnessLandscape {
 		this.n = n;
 		this.k = k;
 	}
+	
+	public void setTables() {
+		interactions = interactions();
+		fitTable = fitTable();
+	}
 
 	public int[] ind2gen(int index, int n) {
 		int[] genotype = new int[n]; // not correct. need to find how to use np
