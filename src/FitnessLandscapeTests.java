@@ -14,11 +14,9 @@ class FitnessLandscapeTests {
 		// landscape.n = 10;
 		// landscape.k = 2;
 
-		landscape.interactions(); // Initialize the landscape
-
 		double[] table = landscape.fitTable;
 		// Make sure the table is the right size
-		assertEquals(table.length, Math.pow(2, landscape.n));
+		assertEquals(Math.pow(2, landscape.n), table.length);
 
 		// Make sure the table has multiple different values
 		ArrayList<Double> seenValues = new ArrayList<Double>();

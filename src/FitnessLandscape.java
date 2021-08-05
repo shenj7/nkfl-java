@@ -1,21 +1,25 @@
+import java.util.ArrayList;
+
 /*
  * Add documentation comments just in case
  */
 public class FitnessLandscape {
-	public int[] visitedTable; //not sure if should keep this, or make private and add accessor methods
-	public double[][] interactions = this.interactions();
-	public double[] fitTable = this.fitTable();
+	public int[] visitedTable; // not sure if should keep this, or make private and add accessor methods
+	//public double[][] interactions;
+	public double[] fitTable;
 	int n = 0; // set this manually
 	int k = 0; // set this manually
-	
+
 	public FitnessLandscape(int n, int k) {
 		this.n = n;
 		this.k = k;
+		setTables();
 	}
-	
+
 	public void setTables() {
-		interactions = interactions();
-		fitTable = fitTable();
+		//interactions = interactions();
+		//fitTable = fitTable();
+		NKLandscape(n, k);
 	}
 
 	public int[] ind2gen(int index, int n) {
@@ -26,56 +30,104 @@ public class FitnessLandscape {
 		}
 		while (n > 0) {
 			n = n - 1;
-			if (index % 2 == 0){
+			if (index % 2 == 0) {
 				genotype[n] = 0;
-			}else{
+			} else {
 				genotype[n] = 1;
 			}
 			index = index / 2; // this is floor division right?
 		}
 		return genotype;
 	}
+
 	public int gen2ind(int[] genotype) {
 		int i = 0;
 		int index = 0;
 		int amount = genotype.length;
-		while(i < amount){
-			index += genotype[i]*Math.pow(2, (amount-i-1));
+		while (i < amount) {
+			index += genotype[i] * Math.pow(2, (amount - i - 1));
 			i++;
 		}
-		return (int)(index);
+		return (int) (index);
 	}
 
-	/*
-	 * generating landscape like discussion
-	 */
-	public double[][] interactions() { // Interaction matrix
-		double[][] interactionList = new double[n][(int)Math.pow(2, k+1)];
-		for (int x = 0; x < n; x++) {
-			for (int y = 0; y < Math.pow(2, k+1); y++) {
-				interactionList[x][y] = SeededRandom.rnd.nextDouble();
+	public void NKLandscape(int n, int k) {
+		double maxFit = 0;
+		double minFit = 1000000;
+		double[][] interactions = new double[n][(int) Math.pow(2, (k+1))];
+		for (int x = 0; x < n; x ++) {
+			for (int y = 0; y < (int) Math.pow(2, (k+1)); y++) {
+				interactions[x][y] = SeededRandom.rnd.nextDouble();
 			}
 		}
-		return interactionList;
-	}
-	
-	public double[] fitTable() {
-		double[] fitTable = new double[(int) Math.pow(2, n)];
-		for (int x = 0; x < Math.pow(2, n); x++) {
-			double currentFit = 0.0;
+		fitTable =  new double[(int) Math.pow(2, n)];
+		int[] visitedTable = new int[(int) Math.pow(2, n)];
+		for (int x = 0; x < ((int) Math.pow(2, n)); x++) {
+			double fit = 0;
 			int[] genotype = ind2gen(x, n);
 			for (int y = 0; y < n; y++) {
-				int[] subgen = new int[k+1]; // maybe change to double
-				for (int z = 0; z < k+1; z++){ // maybe change to double
-					subgen[z] = genotype[(y+z)%n];
+				ArrayList<Integer> subgen = new ArrayList<Integer>();
+//				int[] subgen = new int[k+1];
+				for (int z = 0; z < k+1; z++) {
+					int zInd = (y+z)%n;
+					subgen.add(genotype[zInd]);
+					//subgen[z] = genotype[zInd];
 				}
-				int ind = gen2ind(subgen); // maybe change to double
-				currentFit = currentFit+interactions[y][ind];
+				int[] subgenArray = new int[subgen.size()];
+				for(int i = 0; i < subgen.size(); i++)
+				{
+					subgenArray[i] = subgen.get(i);
+				}
+				int ind = gen2ind(subgenArray);
+				System.out.println(interactions[0].length);
+				fit = fit + interactions[y][ind];
 			}
-			fitTable[x] = currentFit;
+			fitTable[x] = fit;
+			if (fit > maxFit) {
+				maxFit = fit;
+				int[] best = genotype;
+			}
+			if (fit < minFit) {
+				minFit = fit;
+			}
+			
 		}
-		return fitTable;
+		for (int x = 0; x < fitTable.length; x++) {
+			fitTable[x] = (fitTable[x]-minFit)/(maxFit-minFit);
+			fitTable[x] = fitTable[x]*8;
+		}
 	}
+	
+//	/*
+//	 * generating landscape like discussion
+//	 */
+//	public double[][] interactions() { // Interaction matrix
+//		double[][] interactionList = new double[n][(int) Math.pow(2, k + 1)];
+//		for (int x = 0; x < n; x++) {
+//			for (int y = 0; y < Math.pow(2, k + 1); y++) {
+//				interactionList[x][y] = SeededRandom.rnd.nextDouble();
+//			}
+//		}
+//		return interactionList;
+//	}
+//
+//	public double[] fitTable() {
+//		double[] fitTable = new double[(int) Math.pow(2, n)];
+//		for (int x = 0; x < Math.pow(2, n); x++) {
+//			double currentFit = 0.0;
+//			int[] genotype = ind2gen(x, n);
+//			for (int y = 0; y < n; y++) {
+//				int[] subgen = new int[k + 1]; // maybe change to double
+//				for (int z = 0; z < k + 1; z++) { // maybe change to double
+//					subgen[z] = genotype[(y + z) % n];
+//				}
+//				int ind = gen2ind(subgen); // maybe change to double
+//				currentFit = currentFit + interactions[y][ind];
+//			}
+//			fitTable[x] = currentFit;
+//		}
+//		return fitTable;
+//	}
 
 	public double maxFit(double[] fitTable) {
 		double maxFit = 0.0;
@@ -97,22 +149,18 @@ public class FitnessLandscape {
 		return minFit;
 	}
 
-	public double fitness(int[] genotype)
-	{
+	public double fitness(int[] genotype) {
 		int index = this.gen2ind(genotype);
 		return fitTable[index];
 	}
-	
-	public void visited(int[] genotype)
-	{
+
+	public void visited(int[] genotype) {
 		int index = this.gen2ind(genotype);
 		visitedTable[index] = 1;
 	}
-	
-	public void init_visited()
-	{
-		for(int i = 0; i < visitedTable.length; i++)
-		{
+
+	public void init_visited() {
+		for (int i = 0; i < visitedTable.length; i++) {
 			visitedTable[i] = 0;
 		}
 	}
