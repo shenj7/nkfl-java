@@ -17,12 +17,10 @@ public class FitnessLandscape {
 	}
 
 	public void setTables() {
-		//interactions = interactions();
-		//fitTable = fitTable();
 		NKLandscape(n, k);
 	}
 
-	public int[] ind2gen(int index, int n) {
+	public static int[] ind2gen(int index, int n) {
 		int[] genotype = new int[n]; // not correct. need to find how to use np
 		if (index >= Math.pow(2, n)) {
 			System.out.println("ind2gen error");
@@ -40,7 +38,7 @@ public class FitnessLandscape {
 		return genotype;
 	}
 
-	public int gen2ind(int[] genotype) {
+	public static int gen2ind(int[] genotype) {
 		int i = 0;
 		int index = 0;
 		int amount = genotype.length;
@@ -67,11 +65,9 @@ public class FitnessLandscape {
 			int[] genotype = ind2gen(x, n);
 			for (int y = 0; y < n; y++) {
 				ArrayList<Integer> subgen = new ArrayList<Integer>();
-//				int[] subgen = new int[k+1];
 				for (int z = 0; z < k+1; z++) {
 					int zInd = (y+z)%n;
 					subgen.add(genotype[zInd]);
-					//subgen[z] = genotype[zInd];
 				}
 				int[] subgenArray = new int[subgen.size()];
 				for(int i = 0; i < subgen.size(); i++)
@@ -79,7 +75,6 @@ public class FitnessLandscape {
 					subgenArray[i] = subgen.get(i);
 				}
 				int ind = gen2ind(subgenArray);
-				System.out.println(interactions[0].length);
 				fit = fit + interactions[y][ind];
 			}
 			fitTable[x] = fit;
@@ -97,37 +92,6 @@ public class FitnessLandscape {
 			fitTable[x] = fitTable[x]*8;
 		}
 	}
-	
-//	/*
-//	 * generating landscape like discussion
-//	 */
-//	public double[][] interactions() { // Interaction matrix
-//		double[][] interactionList = new double[n][(int) Math.pow(2, k + 1)];
-//		for (int x = 0; x < n; x++) {
-//			for (int y = 0; y < Math.pow(2, k + 1); y++) {
-//				interactionList[x][y] = SeededRandom.rnd.nextDouble();
-//			}
-//		}
-//		return interactionList;
-//	}
-//
-//	public double[] fitTable() {
-//		double[] fitTable = new double[(int) Math.pow(2, n)];
-//		for (int x = 0; x < Math.pow(2, n); x++) {
-//			double currentFit = 0.0;
-//			int[] genotype = ind2gen(x, n);
-//			for (int y = 0; y < n; y++) {
-//				int[] subgen = new int[k + 1]; // maybe change to double
-//				for (int z = 0; z < k + 1; z++) { // maybe change to double
-//					subgen[z] = genotype[(y + z) % n];
-//				}
-//				int ind = gen2ind(subgen); // maybe change to double
-//				currentFit = currentFit + interactions[y][ind];
-//			}
-//			fitTable[x] = currentFit;
-//		}
-//		return fitTable;
-//	}
 
 	public double maxFit(double[] fitTable) {
 		double maxFit = 0.0;
