@@ -5,11 +5,19 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 class FitnessLandscapeTests {
+	
+	@Test
+	public void testRunner() {
+		//testNKLandscape_Basic();
+		//testNumPeaksBasic();
+		runLandscapeAnalysis();
+	}
+	
+	
 	/**
 	 * testNKLandscape_Basic just makes sure the fitTable is the right size, and
 	 * makes sure it initializes with varying values in the table
 	 */
-	@Test
 	public void testNKLandscape_Basic() {
 		FitnessLandscape landscape = new FitnessLandscape(9, 2);
 		// landscape.n = 10;
@@ -34,23 +42,25 @@ class FitnessLandscapeTests {
 		Assertions.assertTrue(seenValues.size() >= numDifferentValuesExpected);
 	}
 
-	@Test
-	public void testNumPeaks() {
+	/**
+	 * testNumPeaksBasic just makes sure a k=0 landscape has 1 peak, and a k=3 has several peaks
+	 */
+	public void testNumPeaksBasic() {
 		int n = 15;
 		FitnessLandscape landscape = new FitnessLandscape(n, 0); // Should have 1 peak
-		int numPeaks = findNumPeaks(landscape, n);
+		int numPeaks = findNumPeaks(landscape);
 
 		Assertions.assertTrue(numPeaks == 1);
 		
 		FitnessLandscape landscape2 = new FitnessLandscape(n, 3); //Should have more than 1 peak
-		int numPeaks2 = findNumPeaks(landscape2, n);
+		int numPeaks2 = findNumPeaks(landscape2);
 
 		Assertions.assertTrue(numPeaks2 > 1); //Should be 1 peak in a K=0 landscape
-		
-		//Uncomment the following line to run the landscape analysis
-		runLandscapeAnalysis();
 	}
 	
+	/**
+	 * runLandscapeAnalysis generates 10 NK landscapes with n=15 at each possible k level, then prints data describing the landscapes to console
+	 */
 	public void runLandscapeAnalysis() {
 		int n = 15;
 		int[] ks = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
@@ -58,45 +68,37 @@ class FitnessLandscapeTests {
 		
 		for(int k : ks)
 		{
-			int[] kOptimaTable = new int[samples];
+			double[] kOptimaTable = new double[samples];
 			for(int s = 0; s < samples; s++)
 			{
 				FitnessLandscape landscape = new FitnessLandscape(n, k);
-				int peaks = findNumPeaks(landscape, n);
+				int peaks = findNumPeaks(landscape);
 				kOptimaTable[s] = peaks;
 			}
 			
 			double averageNumPeaks = 0;
-			for(int i : kOptimaTable)
+			for(double i : kOptimaTable)
 			{
 				averageNumPeaks += i;
 			}
 			averageNumPeaks /= samples;
 			
-			double standardDeviation = 0;
-			for(int i : kOptimaTable)
-			{
-				standardDeviation += Math.abs((double) i - averageNumPeaks);
-			}
-			standardDeviation /= samples;
+			double standardDeviation = calculateSD(kOptimaTable);
 			
 			double chanceToLand = (averageNumPeaks/Math.pow(2, n) * 100.0);
-			System.out.println("k:"+k+ "   local peaks:" + averageNumPeaks + " +\\- " + standardDeviation + "   chance of landing on a peak: " + chanceToLand);
+			System.out.println("k:"+k+ "   local peaks:" + averageNumPeaks + " +\\- " + standardDeviation + "   chance of landing on a peak: " + chanceToLand + "%");
 		}
 	}
 	
+	//runLandscapeAnalysis Helper Methods--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	
-	public int[] copyArray(int[] source)
-	{
-		int[] cpy = new int[source.length];
-		for(int i = 0; i < source.length; i++)
-		{
-			cpy[i] = source[i];
-		}
-		return cpy;
-	}
-
-	public int findNumPeaks(FitnessLandscape landscape, int n) {
+	/**
+	 * Finds the number of peaks in the landscape
+	 * @param landscape FitnessLandscape to be tested upon
+	 * @return number of local maxima
+	 */
+	public int findNumPeaks(FitnessLandscape landscape) {
+		int n = landscape.n;
 		int[] genotype = new int[n];
 		int numPeaks = 0;
 
@@ -110,6 +112,12 @@ class FitnessLandscapeTests {
 		return numPeaks;
 	}
 
+	/**
+	 * Finds out if a specific genotype in a landscape is greater than all its neighbors
+	 * @param genotype bitstring of the genotype
+	 * @param landscape landscape the genotype is in
+	 * @return boolean, true if it is a local maxima, false if it is not
+	 */
 	public boolean greaterThanNeighbors(int[] genotype, FitnessLandscape landscape) {
 		double fitness = landscape.fitness(genotype);
 		// To make this a little more efficient, this modifies the genotype array, and
@@ -127,5 +135,45 @@ class FitnessLandscapeTests {
 
 		return true;
 	}
+	
+	
+	//General Helper Methods --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	/**
+	 * Calculates standard deviation
+	 * @param numArray
+	 * @return standard deviation
+	 */
+	public static double calculateSD(double numArray[])
+    {
+        double sum = 0.0, standardDeviation = 0.0;
+        int length = numArray.length;
 
+        for(double num : numArray) {
+            sum += num;
+        }
+
+        double mean = sum/length;
+
+        for(double num: numArray) {
+            standardDeviation += Math.pow(num - mean, 2);
+        }
+
+        return Math.sqrt(standardDeviation/length);
+    }
+	
+	/**
+	 * Makes a copy of the source array
+	 * @param source
+	 * @return a copy of the source array
+	 */
+	public static int[] copyArray(int[] source)
+	{
+		int[] cpy = new int[source.length];
+		for(int i = 0; i < source.length; i++)
+		{
+			cpy[i] = source[i];
+		}
+		return cpy;
+	}
 }
