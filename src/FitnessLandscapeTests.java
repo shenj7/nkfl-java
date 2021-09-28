@@ -41,56 +41,50 @@ class FitnessLandscapeTests {
 		int numPeaks = findNumPeaks(landscape, n);
 
 		Assertions.assertTrue(numPeaks == 1);
-		
-		FitnessLandscape landscape2 = new FitnessLandscape(n, 3); //Should have more than 1 peak
+
+		FitnessLandscape landscape2 = new FitnessLandscape(n, 3); // Should have more than 1 peak
 		int numPeaks2 = findNumPeaks(landscape2, n);
 
-		Assertions.assertTrue(numPeaks2 > 1); //Should be 1 peak in a K=0 landscape
-		
-		//Uncomment the following line to run the landscape analysis
+		Assertions.assertTrue(numPeaks2 > 1); // Should be 1 peak in a K=0 landscape
+
+		// Uncomment the following line to run the landscape analysis
 		runLandscapeAnalysis();
 	}
-	
+
 	public void runLandscapeAnalysis() {
 		int n = 15;
-		int[] ks = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+		int[] ks = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
 		int samples = 10;
-		
-		for(int k : ks)
-		{
+
+		for (int k : ks) {
 			int[] kOptimaTable = new int[samples];
-			for(int s = 0; s < samples; s++)
-			{
+			for (int s = 0; s < samples; s++) {
 				FitnessLandscape landscape = new FitnessLandscape(n, k);
 				int peaks = findNumPeaks(landscape, n);
 				kOptimaTable[s] = peaks;
 			}
-			
+
 			double averageNumPeaks = 0;
-			for(int i : kOptimaTable)
-			{
+			for (int i : kOptimaTable) {
 				averageNumPeaks += i;
 			}
 			averageNumPeaks /= samples;
-			
+
 			double standardDeviation = 0;
-			for(int i : kOptimaTable)
-			{
+			for (int i : kOptimaTable) {
 				standardDeviation += Math.abs((double) i - averageNumPeaks);
 			}
 			standardDeviation /= samples;
-			
-			double chanceToLand = (averageNumPeaks/Math.pow(2, n) * 100.0);
-			System.out.println("k:"+k+ "   local peaks:" + averageNumPeaks + " +\\- " + standardDeviation + "   chance of landing on a peak: " + chanceToLand);
+
+			double chanceToLand = (averageNumPeaks / Math.pow(2, n) * 100.0);
+			System.out.println("k:" + k + "   local peaks:" + averageNumPeaks + " +\\- " + standardDeviation
+					+ "   chance of landing on a peak: " + chanceToLand);
 		}
 	}
-	
-	
-	public int[] copyArray(int[] source)
-	{
+
+	public int[] copyArray(int[] source) {
 		int[] cpy = new int[source.length];
-		for(int i = 0; i < source.length; i++)
-		{
+		for (int i = 0; i < source.length; i++) {
 			cpy[i] = source[i];
 		}
 		return cpy;

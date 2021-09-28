@@ -5,7 +5,7 @@ import java.util.ArrayList;
  */
 public class FitnessLandscape {
 	public int[] visitedTable; // not sure if should keep this, or make private and add accessor methods
-	//public double[][] interactions;
+	// public double[][] interactions;
 	public double[] fitTable;
 	int n = 0; // set this manually
 	int k = 0; // set this manually
@@ -52,26 +52,25 @@ public class FitnessLandscape {
 	public void NKLandscape(int n, int k) {
 		double maxFit = 0;
 		double minFit = 1000000;
-		double[][] interactions = new double[n][(int) Math.pow(2, (k+1))];
-		for (int x = 0; x < n; x ++) {
-			for (int y = 0; y < (int) Math.pow(2, (k+1)); y++) {
+		double[][] interactions = new double[n][(int) Math.pow(2, (k + 1))];
+		for (int x = 0; x < n; x++) {
+			for (int y = 0; y < (int) Math.pow(2, (k + 1)); y++) {
 				interactions[x][y] = SeededRandom.rnd.nextDouble();
 			}
 		}
-		fitTable =  new double[(int) Math.pow(2, n)];
+		fitTable = new double[(int) Math.pow(2, n)];
 		int[] visitedTable = new int[(int) Math.pow(2, n)];
 		for (int x = 0; x < ((int) Math.pow(2, n)); x++) {
 			double fit = 0;
 			int[] genotype = ind2gen(x, n);
 			for (int y = 0; y < n; y++) {
 				ArrayList<Integer> subgen = new ArrayList<Integer>();
-				for (int z = 0; z < k+1; z++) {
-					int zInd = (y+z)%n;
+				for (int z = 0; z < k + 1; z++) {
+					int zInd = (y + z) % n;
 					subgen.add(genotype[zInd]);
 				}
 				int[] subgenArray = new int[subgen.size()];
-				for(int i = 0; i < subgen.size(); i++)
-				{
+				for (int i = 0; i < subgen.size(); i++) {
 					subgenArray[i] = subgen.get(i);
 				}
 				int ind = gen2ind(subgenArray);
@@ -85,11 +84,11 @@ public class FitnessLandscape {
 			if (fit < minFit) {
 				minFit = fit;
 			}
-			
+
 		}
 		for (int x = 0; x < fitTable.length; x++) {
-			fitTable[x] = (fitTable[x]-minFit)/(maxFit-minFit);
-			fitTable[x] = fitTable[x]*8;
+			fitTable[x] = (fitTable[x] - minFit) / (maxFit - minFit);
+			fitTable[x] = fitTable[x] * 8;
 		}
 	}
 
