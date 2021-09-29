@@ -6,7 +6,8 @@ import java.util.Random;
 public class SeededRandom {
 
 	static SeededRandom thisSingle = null;
-	static Random rnd = new Random(1);
+	static Random rnd = new Random();
+//	static Random rnd = new Random(1);
 
 	/*
 	 * Insures we only have one instance of this class

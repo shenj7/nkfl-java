@@ -5,20 +5,19 @@ import java.util.Timer;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/**
+ * 
+ * @author Jacob Ashworth
+ *
+ */
 class FitnessLandscapeTests {
-	
-	@Test
-	public void testRunner() {
-		//testNKLandscape_Basic();
-		//testNumPeaksBasic();
-		runLandscapeAnalysis();
-	}
 	
 	
 	/**
 	 * testNKLandscape_Basic just makes sure the fitTable is the right size, and
 	 * makes sure it initializes with varying values in the table
 	 */
+	@Test
 	public void testNKLandscape_Basic() {
 		FitnessLandscape landscape = new FitnessLandscape(9, 2);
 		// landscape.n = 10;
@@ -46,6 +45,7 @@ class FitnessLandscapeTests {
 	/**
 	 * testNumPeaksBasic just makes sure a k=0 landscape has 1 peak, and a k=3 has several peaks
 	 */
+	@Test
 	public void testNumPeaksBasic() {
 		int n = 15;
 		FitnessLandscape landscape = new FitnessLandscape(n, 0); // Should have 1 peak
@@ -62,6 +62,7 @@ class FitnessLandscapeTests {
 	/**
 	 * runLandscapeAnalysis generates 10 NK landscapes with n=15 at each possible k level, then prints data describing the landscapes to console
 	 */
+	//@Test
 	public void runLandscapeAnalysis() {
 		int n = 20;
 		int[] ks = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};

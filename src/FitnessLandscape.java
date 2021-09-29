@@ -1,7 +1,13 @@
 import java.util.ArrayList;
 
-/*
- * Add documentation comments just in case
+/**
+ * Java Implementation of https://github.com/jasonayoder/EvoDevoNKFL
+ * 
+ * Generation of NKFL is very computationally expensive, and should realistically be limited
+ * to n<25 for reasonable generation times.
+ * 
+ * @author Shen Jackson and Jacob Ashworth
+ *
  */
 public class FitnessLandscape {
 	// Instance Variables
@@ -33,7 +39,7 @@ public class FitnessLandscape {
 	 * 
 	 * @param n standard 'n' value in a NKFL
 	 * @param k standard 'k' value in a NKFL
-	 * @return random table size [n][2^(k+1]
+	 * @return random table size [n][2^(k+1)]
 	 */
 	public double[][] generateRandomInteractionTable(int n, int k) {
 		double[][] interactions = new double[n][(int) Math.pow(2, (k + 1))];
@@ -172,6 +178,52 @@ public class FitnessLandscape {
 		}
 	}
 	
+	//Not used by the landscape itself, but called by learning strategies to find their greatest neighbor
+	//Copies a lot of arrays to avoid altering location data
+	public int[] greatestNeighbor(int[] location)
+	{
+		int[] greatest = copyArray(location);
+		double greatestFitness = this.fitness(greatest);
+		
+		if(location.length != n) //invalid location
+		{
+			return null;
+		}
+		int[] testArray = copyArray(location);
+		double testFitness;
+		for(int i = 0; i < n; i++)
+		{
+			testArray[i] = (testArray[i] + 1) % 2; //flip bit to test
+
+			testFitness = this.fitness(testArray);
+			if (testFitness > greatestFitness) {
+				greatest = copyArray(testArray);
+				greatestFitness = testFitness;
+			}
+
+			testArray[i] = (testArray[i] + 1) % 2; //flip it back
+		}
+		return greatest;
+	}
+	
+	public boolean isLocalMaxima(int[] sourceGenotype)
+	{
+		int[] genotype = copyArray(sourceGenotype);//Don't want to corrupt our source
+		double fitness = this.fitness(genotype);
+
+		for (int i = 0; i < genotype.length; i++) {
+			genotype[i] = (genotype[i] + 1) % 2;
+
+			if (this.fitness(genotype) > fitness) {
+				return false;
+			}
+
+			genotype[i] = (genotype[i] + 1) % 2;
+		}
+
+		return true;
+	}
+	
 	//Static Helper Methods ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
 	 * Takes an index (int) and turns it into a binary bitstring
@@ -211,5 +263,15 @@ public class FitnessLandscape {
 			i++;
 		}
 		return (int) (index);
+	}
+	
+	public static int[] copyArray(int[] source)
+	{
+		int[] cpy = new int[source.length];
+		for(int i = 0; i < source.length; i++)
+		{
+			cpy[i] = source[i];
+		}
+		return cpy;
 	}
 }
