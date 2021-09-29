@@ -1,5 +1,6 @@
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.Timer;
 
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -62,12 +63,13 @@ class FitnessLandscapeTests {
 	 * runLandscapeAnalysis generates 10 NK landscapes with n=15 at each possible k level, then prints data describing the landscapes to console
 	 */
 	public void runLandscapeAnalysis() {
-		int n = 15;
-		int[] ks = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+		int n = 20;
+		int[] ks = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 		int samples = 10;
 		
 		for(int k : ks)
 		{
+			double startTime = System.currentTimeMillis();
 			double[] kOptimaTable = new double[samples];
 			for(int s = 0; s < samples; s++)
 			{
@@ -86,7 +88,9 @@ class FitnessLandscapeTests {
 			double standardDeviation = calculateSD(kOptimaTable);
 			
 			double chanceToLand = (averageNumPeaks/Math.pow(2, n) * 100.0);
-			System.out.println("k:"+k+ "   local peaks:" + averageNumPeaks + " +\\- " + standardDeviation + "   chance of landing on a peak: " + chanceToLand + "%");
+			double endTime = System.currentTimeMillis();
+			System.out.println("Generated " + samples + " landscapes with k=" + k + " in " + ((endTime - startTime)/1000) + " seconds");
+			//System.out.println("k:"+k+ "   local peaks:" + averageNumPeaks + " +\\- " + standardDeviation + "   chance of landing on a peak: " + chanceToLand + "%");
 		}
 	}
 	

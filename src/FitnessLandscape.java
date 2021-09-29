@@ -90,6 +90,11 @@ public class FitnessLandscape {
 		}
 		
 		this.fitTable = scaleTable(fitnessTable, maxFitness, minFitness);
+//		for(int i = 0; i < fitTable.length && i < 10; i++)
+//		{
+//			System.out.print(fitTable[i] + " ");
+//		}
+//		System.out.println("");
 	}
 	
 	/**
