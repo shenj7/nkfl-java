@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
  * @author Jacob Ashworth
  *
  */
-class LearningStrategyTests {
+class Tests_LearningStrategy {
 
 	/**
 	 * Tests initialization of a strategy by passing in an array

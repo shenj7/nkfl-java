@@ -9,7 +9,8 @@
  * 0 = random walk
  * 1 = steepest climb
  * 
- * The Learning Strategy currently is capable of only random walking or steepest climbing.  This is to attempt
+ * The Learning Strategy currently is capable of only 
+ * random walking or steepest climbing.  This is to attempt
  * to reproduce the results in Dr. Yoder's original code.  The code can easily be expanded to accommodate
  * additional possible strategies (such as doing nothing or non-steepest climbing)
  * 
@@ -17,11 +18,15 @@
  *
  */
 public class LearningStrategy {
+	public static final int highestNumStrategy = 1;
+	
 	public FitnessLandscape landscape;//This LearningStrategy's NKFL
 	public int currentStep = -1; //The most recently executed step of the strategy (starts at -1 because step 0 hasn't been run yet)
 	public int[] strategyArray; //integer string representing the strategy (0=random walk, 1=steepest climb)
+	public int[] genotype; //
 	public double currentFitness; //the current fitness of the genotype
-	public int[] genotype;
+	public int[] originalGenotype;
+	public double originalFitness; //save this data so we don't have to recompute it every time we reset
 	
 	/**
 	 * Initializes a LearningStrategy with the specified strategyArray
@@ -31,15 +36,13 @@ public class LearningStrategy {
 	public LearningStrategy(FitnessLandscape landscape, int[] strategyArray)
 	{
 		this.landscape = landscape;
-		
 		this.strategyArray = strategyArray;
 		
-		genotype = new int[landscape.n];
-		for(int i = 0; i < landscape.n; i++)
-		{
-			genotype[i] = Math.abs(SeededRandom.rnd.nextInt() % 2); //Bitstring of zeroes and ones
-		}
+		genotype = CommonMethods.randomIntArray(landscape.n, 1);
 		this.currentFitness = landscape.fitness(genotype);
+		
+		this.originalGenotype = CommonMethods.copyArray(genotype);
+		this.originalFitness = currentFitness;
 	}
 	
 	/**
@@ -51,11 +54,7 @@ public class LearningStrategy {
 	{
 		this(landscape, null);
 		
-		strategyArray = new int[strategyLength];
-		for(int i = 0; i < strategyLength; i++)
-		{
-			strategyArray[i] = Math.abs(SeededRandom.rnd.nextInt() % 2); //0 (random walk) or 1 (steepest climb)
-		}
+		strategyArray = CommonMethods.randomIntArray(strategyLength, highestNumStrategy);
 	}
 	
 	/**
@@ -82,9 +81,14 @@ public class LearningStrategy {
 			{
 				this.steepestClimb(1);
 			}
-			else
+			else if(strategyArray[currentStep] > highestNumStrategy)
 			{
 				System.err.println("Did not recognize bit " + strategyArray[currentStep] + " in strategy[" + currentStep + "]");
+				return -1;
+			}
+			else
+			{
+				System.err.println("highestNumStrategy is incorrect, please correct method executeSteps");
 				return -1;
 			}
 		}
@@ -134,5 +138,19 @@ public class LearningStrategy {
 			genotype = landscape.greatestNeighbor(genotype);
 		}
 		this.currentFitness = landscape.fitness(genotype);
+	}
+	
+	public void resetStrategy()
+	{
+		this.genotype = CommonMethods.copyArray(this.originalGenotype);
+		this.currentStep = -1;
+		this.currentFitness = originalFitness;
+	}
+	
+	public void setOriginalGenotype(int[] genotype)
+	{
+		this.originalGenotype = genotype;
+		this.originalFitness = landscape.fitness(originalGenotype);
+		this.resetStrategy();
 	}
 }

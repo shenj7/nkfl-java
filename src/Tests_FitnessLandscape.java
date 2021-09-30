@@ -10,7 +10,7 @@ import java.util.Scanner;
  * @author Jacob Ashworth
  *
  */
-class FitnessLandscapeTests {
+class Tests_FitnessLandscape {
 	
 	
 	/**
