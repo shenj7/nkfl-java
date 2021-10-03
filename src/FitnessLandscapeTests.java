@@ -23,7 +23,7 @@ class FitnessLandscapeTests {
 		// landscape.n = 10;
 		// landscape.k = 2;
 
-		double[] table = landscape.fitTable;
+		double[] table = landscape.getFitTable();
 		// Make sure the table is the right size
 		assertEquals(Math.pow(2, landscape.n), table.length);
 

@@ -5,10 +5,11 @@ import java.util.ArrayList;
  */
 public class FitnessLandscape {
 	// Instance Variables
-	public int[] visitedTable; // not sure if should keep this, or make private and add accessor methods
-	public double[] fitTable; // This is set in generateFitnessTable
-	int n; // This is set in constructor
-	int k; // This is set in constructor
+	private int[] visitedTable; // not sure if should keep this, or make private and add accessor methods
+	private double[] fitTable; // This is set in generateFitnessTable
+	private double[][] interactionTable; // Most likely won't need to access this, but it won't hurt
+	public int n; // This is set in constructor
+	public int k; // This is set in constructor
 
 	/**
 	 * Initializes a NK fitness landscape with the given n and k values
@@ -20,10 +21,10 @@ public class FitnessLandscape {
 		this.n = n;
 		this.k = k;
 		
-		double[][] interactionTable = generateRandomInteractionTable(n, k);
+		this.interactionTable = generateRandomInteractionTable(n, k);
 		generateFitnessTable(interactionTable); //this has no return value because it stores its data in the landscape globals
 		
-		visitedTable = new int[(int) Math.pow(2, n)];
+		this.visitedTable = new int[(int) Math.pow(2, n)];
 		init_visited();
 	}
 
@@ -117,9 +118,9 @@ public class FitnessLandscape {
 	 */
 	public double maxFit() {
 		double maxFit = 0.0;
-		for (int x = 0; x < fitTable.length; x++) {
-			if (fitTable[x] > maxFit) {
-				maxFit = fitTable[x];
+		for (int x = 0; x < getFitTable().length; x++) {
+			if (getFitTable()[x] > maxFit) {
+				maxFit = getFitTable()[x];
 			}
 		}
 		return maxFit;
@@ -131,9 +132,9 @@ public class FitnessLandscape {
 	 */
 	public double minFit() {
 		double minFit = 0.0;
-		for (int x = 0; x < fitTable.length; x++) {
-			if (fitTable[x] < minFit) {
-				minFit = fitTable[x];
+		for (int x = 0; x < getFitTable().length; x++) {
+			if (getFitTable()[x] < minFit) {
+				minFit = getFitTable()[x];
 			}
 		}
 		return minFit;
@@ -146,7 +147,7 @@ public class FitnessLandscape {
 	 */
 	public double fitness(int[] genotype) {
 		int index = FitnessLandscape.gen2ind(genotype);
-		return fitTable[index];
+		return getFitTable()[index];
 	}
 
 	/**
@@ -206,5 +207,13 @@ public class FitnessLandscape {
 			i++;
 		}
 		return (int) (index);
+	}
+
+	public double[] getFitTable() {
+		return fitTable;
+	}
+	
+	public int[] getVisitedTable() {
+		return visitedTable;
 	}
 }
