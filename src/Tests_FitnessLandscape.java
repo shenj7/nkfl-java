@@ -1,22 +1,22 @@
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.Timer;
 
 import java.util.ArrayList;
 
-class FitnessLandscapeTests {
-	
-	@Test
-	public void testRunner() {
-		//testNKLandscape_Basic();
-		//testNumPeaksBasic();
-		runLandscapeAnalysis();
-	}
+/**
+ * 
+ * @author Jacob Ashworth
+ *
+ */
+class Tests_FitnessLandscape {
 	
 	
 	/**
 	 * testNKLandscape_Basic just makes sure the fitTable is the right size, and
 	 * makes sure it initializes with varying values in the table
 	 */
+	@Test
 	public void testNKLandscape_Basic() {
 		FitnessLandscape landscape = new FitnessLandscape(9, 2);
 		// landscape.n = 10;
@@ -44,6 +44,7 @@ class FitnessLandscapeTests {
 	/**
 	 * testNumPeaksBasic just makes sure a k=0 landscape has 1 peak, and a k=3 has several peaks
 	 */
+	@Test
 	public void testNumPeaksBasic() {
 		int n = 15;
 		FitnessLandscape landscape = new FitnessLandscape(n, 0); // Should have 1 peak
@@ -60,13 +61,15 @@ class FitnessLandscapeTests {
 	/**
 	 * runLandscapeAnalysis generates 10 NK landscapes with n=15 at each possible k level, then prints data describing the landscapes to console
 	 */
+	//@Test
 	public void runLandscapeAnalysis() {
-		int n = 15;
-		int[] ks = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+		int n = 20;
+		int[] ks = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 		int samples = 10;
 		
 		for(int k : ks)
 		{
+			double startTime = System.currentTimeMillis();
 			double[] kOptimaTable = new double[samples];
 			for(int s = 0; s < samples; s++)
 			{
@@ -85,7 +88,9 @@ class FitnessLandscapeTests {
 			double standardDeviation = calculateSD(kOptimaTable);
 			
 			double chanceToLand = (averageNumPeaks/Math.pow(2, n) * 100.0);
-			System.out.println("k:"+k+ "   local peaks:" + averageNumPeaks + " +\\- " + standardDeviation + "   chance of landing on a peak: " + chanceToLand + "%");
+			double endTime = System.currentTimeMillis();
+			System.out.println("Generated " + samples + " landscapes with k=" + k + " in " + ((endTime - startTime)/1000) + " seconds");
+			//System.out.println("k:"+k+ "   local peaks:" + averageNumPeaks + " +\\- " + standardDeviation + "   chance of landing on a peak: " + chanceToLand + "%");
 		}
 	}
 	
