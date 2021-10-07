@@ -46,16 +46,16 @@ class Tests_StrategyGeneration {
 		{
 			constructorArray[i] = 0;
 		}
-		strategies.add(CommonMethods.copyArray(constructorArray));
+		strategies.add(NDArrayManager.copyArray1d(constructorArray));
 		for(int i = 0; i < steps; i++)
 		{
 			constructorArray[i] = 1;
-			strategies.add(CommonMethods.copyArray(constructorArray));
+			strategies.add(NDArrayManager.copyArray1d(constructorArray));
 		}
 		for(int i = 0; i < steps; i++)
 		{
 			constructorArray[i] = 0;
-			strategies.add(CommonMethods.copyArray(constructorArray));
+			strategies.add(NDArrayManager.copyArray1d(constructorArray));
 		}
 		
 		//Run all the strategies
@@ -69,7 +69,7 @@ class Tests_StrategyGeneration {
 			}
 			StrategyGeneration gen = new StrategyGeneration(strats);
 			gen.runAllStrategies();
-			System.out.println("Average final fitness for " + CommonMethods.arrayAsString(strategy) + " was " + gen.averageFitness());
+			System.out.println("Average final fitness for " + NDArrayManager.array1dAsString(strategy) + " was " + gen.averageFitness());
 		}
 	}
 }

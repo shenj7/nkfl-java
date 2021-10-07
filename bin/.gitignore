@@ -1,7 +1,5 @@
-/LearningStrategy.class
-/LearningStrategyTests.class
-/StrategyGeneration.class
-/CommonMethods.class
-/Tests_StrategyGeneration.class
-/Tests_LearningStrategy.class
-/Tests_FitnessLandscape.class
+/CSVWriter.class
+/NDArrayManager.class
+/CSVWriterExample.class
+/plot_data.csv
+/ExperimentData/

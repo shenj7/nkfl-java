@@ -46,7 +46,7 @@ public class StrategyGeneration {
 	public void randomizeOriginalGenotypes() {
 		for(LearningStrategy strategy : strategies)
 		{
-			strategy.setOriginalGenotype(CommonMethods.randomIntArray(landscape.n, 1));
+			strategy.setOriginalGenotype(NDArrayManager.array1dRandInt(landscape.n, 1));
 		}
 	}
 	
