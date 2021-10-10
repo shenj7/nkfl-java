@@ -114,7 +114,7 @@ public class LearningStrategy {
 	 */
 	public LearningStrategy(FitnessLandscape landscape, int strategyLength)
 	{
-		this(landscape, null);
+		this(landscape, new int[strategyLength]);
 		strategyArray = CommonMethods.randomIntArray(strategyLength, highestNumStrategy);
 		this.plasticity = new int[strategyArray.length];
 		for (int x = 0; x < plasticity.length; x++) { // setting plasticity to 1, for same results as before
