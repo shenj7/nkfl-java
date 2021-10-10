@@ -21,7 +21,7 @@ import java.io.PrintWriter;
  * @author Jacob Ashworth, Edward Kim, Lyra Lee
  *
  */
-public class LearningStrategy {
+public class LearningStrategy implements Comparable<LearningStrategy>{
 
 	public static void main(String[] args) {
 
@@ -144,7 +144,10 @@ public class LearningStrategy {
 		this.originalGenotype = NDArrayManager.copyArray1d(genotype);
 		this.originalFitness = currentFitness;
 
-		this.fitnessArray = new double[strategyArray.length];
+		if(strategyArray != null)
+		{
+			this.fitnessArray = new double[strategyArray.length];
+		}
 	}
 
 	/**
@@ -156,7 +159,7 @@ public class LearningStrategy {
 	public LearningStrategy(FitnessLandscape landscape, int strategyLength) {
 		this(landscape, null);
 
-		strategyArray = NDArrayManager.array1dRandInt(strategyLength, highestNumStrategy);
+		strategyArray = NDArrayManager.array1dRandInt(strategyLength, highestNumStrategy + 1);
 
 		fitnessArray = new double[strategyLength];
 	}
@@ -237,6 +240,19 @@ public class LearningStrategy {
 		}
 		this.currentFitness = landscape.fitness(genotype);
 	}
+	
+	private void hillClimb(int steps) {
+		int changeIndex = SeededRandom.rnd.nextInt(genotype.length);
+		genotype[changeIndex] = (genotype[changeIndex] + 1) % 2;
+		if(landscape.fitness(genotype) < currentFitness)
+		{
+			genotype[changeIndex] = (genotype[changeIndex] + 1) % 2;
+		}
+		else
+		{
+			currentFitness = landscape.fitness(genotype);
+		}
+	}
 
 	public void resetStrategy() {
 		this.genotype = NDArrayManager.copyArray1d(this.originalGenotype);
@@ -288,6 +304,44 @@ public class LearningStrategy {
 
 		} catch (FileNotFoundException e) {
 			System.err.println("CSV file not found");
+		}
+	}
+	
+	/**
+	 * Returns a child that has the exactly the same strategy as the parent
+	 * @param index
+	 * @return
+	 */
+	public LearningStrategy getDirectChild() {
+		int[] childStrat = NDArrayManager.copyArray1d(this.strategyArray);
+		return new LearningStrategy(landscape, childStrat);
+	}
+	
+	public int getStrategyLength() {
+		return strategyArray.length;
+	}
+	
+	public int getStepAtIndex(int i) {
+		return strategyArray[i];
+	}
+	
+	public void mutateStep(int i) {
+		strategyArray[i] = SeededRandom.rnd.nextInt(highestNumStrategy + 1);
+	}
+
+	@Override
+	public int compareTo(LearningStrategy otherStrategy) {
+		if(this.currentFitness > otherStrategy.currentFitness)
+		{
+			return 1;
+		}
+		else if(this.currentFitness == otherStrategy.currentFitness)
+		{
+			return 0;
+		}
+		else
+		{
+			return -1;
 		}
 	}
 }

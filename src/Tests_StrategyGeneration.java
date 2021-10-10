@@ -34,7 +34,7 @@ class Tests_StrategyGeneration {
 	
 	@Test
 	void runGenerationAnalysis() {
-		FitnessLandscape landscape = new FitnessLandscape(20, 1);
+		FitnessLandscape landscape = new FitnessLandscape(15, 6);
 		int steps = 15;
 		int strategiesPerGeneration = 100000;
 		

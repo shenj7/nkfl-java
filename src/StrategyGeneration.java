@@ -1,4 +1,9 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class StrategyGeneration {
 	
@@ -64,5 +69,56 @@ public class StrategyGeneration {
 			sumOfFitnesses += strategy.currentFitness;
 		}
 		return sumOfFitnesses / strategies.size();
+	}
+	
+	public int getNumStrategies() {
+		return strategies.size();
+	}
+	
+	public int getStrategyLength() {
+		return strategyLength;
+	}
+	
+	public LearningStrategy getDirectChild(int index)
+	{
+		return strategies.get(index).getDirectChild();
+	}
+	
+	public LearningStrategy getStrategyAtIndex(int index)
+	{
+		return strategies.get(index);
+	}
+	
+	public void mutateGeneration(double mutationPercentage)
+	{
+		for(LearningStrategy strategy : strategies)
+		{
+			for(int i = 0; i < strategy.getStrategyLength(); i++)
+			{
+				double roll = SeededRandom.rnd.nextDouble() * 100;
+				if(roll < mutationPercentage)
+				{
+					strategy.mutateStep(i);
+				}
+			}
+		}
+	}
+	
+	public void sortStrategies() {
+		Collections.sort(strategies);
+		Collections.reverse(strategies);//Greatest first
+	}
+	
+	public double getPercentWithStepAtIndex(int step, int index)
+	{
+		int numMatches = 0;
+		for(LearningStrategy strategy : strategies)
+		{
+			if(strategy.getStepAtIndex(index) == step)
+			{
+				numMatches++;
+			}
+		}
+		return (double)numMatches / (double)strategies.size();
 	}
 }
