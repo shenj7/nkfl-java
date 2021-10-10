@@ -1,7 +1,5 @@
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
-import java.util.Timer;
-
 import java.util.ArrayList;
 
 /**
@@ -78,16 +76,16 @@ class Tests_FitnessLandscape {
 				kOptimaTable[s] = peaks;
 			}
 			
-			double averageNumPeaks = 0;
-			for(double i : kOptimaTable)
-			{
-				averageNumPeaks += i;
-			}
-			averageNumPeaks /= samples;
+//			double averageNumPeaks = 0;
+//			for(double i : kOptimaTable)
+//			{
+//				averageNumPeaks += i;
+//			}
+//			averageNumPeaks /= samples;
 			
-			double standardDeviation = calculateSD(kOptimaTable);
+//			double standardDeviation = calculateSD(kOptimaTable);
 			
-			double chanceToLand = (averageNumPeaks/Math.pow(2, n) * 100.0);
+//			double chanceToLand = (averageNumPeaks/Math.pow(2, n) * 100.0);
 			double endTime = System.currentTimeMillis();
 			System.out.println("Generated " + samples + " landscapes with k=" + k + " in " + ((endTime - startTime)/1000) + " seconds");
 			//System.out.println("k:"+k+ "   local peaks:" + averageNumPeaks + " +\\- " + standardDeviation + "   chance of landing on a peak: " + chanceToLand + "%");

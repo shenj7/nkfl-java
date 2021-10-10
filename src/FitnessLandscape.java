@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-
 /**
  * Java Implementation of https://github.com/jasonayoder/EvoDevoNKFL
  * 

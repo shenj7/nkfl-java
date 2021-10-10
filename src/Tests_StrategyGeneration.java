@@ -1,15 +1,11 @@
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import junit.framework.Assert;
-
 class Tests_StrategyGeneration {
 
-//	@Test
+	@Test
 	void testBasicGenerationDeclaration() {
 		FitnessLandscape landscape = new FitnessLandscape(15, 3);
 		StrategyGeneration gen = new StrategyGeneration(landscape, 1000, 10);
@@ -18,7 +14,7 @@ class Tests_StrategyGeneration {
 		Assertions.assertEquals(10, gen.strategies.get(0).strategyArray.length);
 	}
 	
-//	@Test
+	@Test
 	void testDeterminedGenerationDeclaration() {
 		FitnessLandscape landscape = new FitnessLandscape(15, 3);
 		ArrayList<LearningStrategy> strats = new ArrayList<LearningStrategy>();
@@ -32,7 +28,7 @@ class Tests_StrategyGeneration {
 		Assertions.assertEquals(10, gen.strategies.get(0).strategyArray.length);
 	}
 	
-	@Test
+//	@Test
 	void runGenerationAnalysis() {
 		FitnessLandscape landscape = new FitnessLandscape(20, 1);
 		int steps = 15;

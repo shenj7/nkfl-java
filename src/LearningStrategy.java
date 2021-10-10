@@ -27,6 +27,11 @@ public class LearningStrategy {
 	public double currentFitness; //the current fitness of the genotype
 	public int[] originalGenotype;
 	public double originalFitness; //save this data so we don't have to recompute it every time we reset
+	public int[] plasticity; // [1, 1, 1, ... 1] is the default.
+							// number of steps it takes in each section of strategyarray.
+							// normally higher in the beginning, lower at the end.
+							// note: plasticity will increase the total number of steps taken
+							// todo: will add in a method later to make total number of steps the same
 	
 	/**
 	 * Initializes a LearningStrategy with the specified strategyArray
@@ -43,8 +48,65 @@ public class LearningStrategy {
 		
 		this.originalGenotype = CommonMethods.copyArray(genotype);
 		this.originalFitness = currentFitness;
+		this.plasticity = new int[strategyArray.length];
+		for (int x = 0; x < plasticity.length; x++) { // setting plasticity to 1, for same results as before
+			plasticity[x] = 1;
+		}
 	}
 	
+	/**
+	 * Initializes a LearningStrategy with the specified strategyArray and plasticity
+	 * @param landscape the FitnessLandscape of the LearningStrategy
+	 * @param strategyArray the array representing the strategy
+	 * @param plasticity the set 
+	 */
+	public LearningStrategy(FitnessLandscape landscape, int[] strategyArray, int[] plasticity)
+	{
+		if (plasticity.length != strategyArray.length) {
+			throw new IllegalArgumentException();
+		}
+		this.landscape = landscape;
+		this.strategyArray = strategyArray;
+		
+		genotype = CommonMethods.randomIntArray(landscape.n, 1);
+		this.currentFitness = landscape.fitness(genotype);
+		
+		this.originalGenotype = CommonMethods.copyArray(genotype);
+		this.originalFitness = currentFitness;
+		this.plasticity = plasticity;
+	}
+	
+	/**
+	 * Initializes a LearningStrategy with the specified strategyArray and plasticity
+	 * @param landscape the FitnessLandscape of the LearningStrategy
+	 * @param strategyArray the array representing the strategy
+	 * @param randPlas true for 
+	 */
+	public LearningStrategy(FitnessLandscape landscape, int[] strategyArray, Boolean randPlas)
+	{
+		this.landscape = landscape;
+		this.strategyArray = strategyArray;
+		
+		genotype = CommonMethods.randomIntArray(landscape.n, 1);
+		this.currentFitness = landscape.fitness(genotype);
+		
+		this.originalGenotype = CommonMethods.copyArray(genotype);
+		this.originalFitness = currentFitness;
+		generatePlasticity();
+	}
+	
+	/*
+	 * Generates a random plasticity array with more likeliness to have more plasticity 
+	 * near the beginning of life.
+	 */
+	private void generatePlasticity() {
+		int n = strategyArray.length;
+		this.plasticity = new int[strategyArray.length];
+		for (int x = 0; x < n; x++) {
+			this.plasticity[x] = SeededRandom.rnd.nextInt((n-x)/n); // next random with higher weight towards beginning
+		}
+	}
+
 	/**
 	 * Initializes a LearningStrategy with a random strategy
 	 * @param landscape the FitnessLandscape of the LearningStrategy
@@ -53,8 +115,11 @@ public class LearningStrategy {
 	public LearningStrategy(FitnessLandscape landscape, int strategyLength)
 	{
 		this(landscape, null);
-		
 		strategyArray = CommonMethods.randomIntArray(strategyLength, highestNumStrategy);
+		this.plasticity = new int[strategyArray.length];
+		for (int x = 0; x < plasticity.length; x++) { // setting plasticity to 1, for same results as before
+			plasticity[x] = 1;
+		}
 	}
 	
 	/**
@@ -75,11 +140,11 @@ public class LearningStrategy {
 			
 			if(strategyArray[currentStep] == 0)
 			{
-				this.randomWalk(1);
+				this.randomWalk(plasticity[currentStep]);
 			}
 			else if(strategyArray[currentStep] == 1)
 			{
-				this.steepestClimb(1);
+				this.steepestClimb(plasticity[currentStep]);
 			}
 			else if(strategyArray[currentStep] > highestNumStrategy)
 			{
