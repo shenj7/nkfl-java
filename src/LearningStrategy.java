@@ -22,101 +22,7 @@ import java.io.PrintWriter;
  *
  */
 public class LearningStrategy implements Comparable<LearningStrategy>{
-
-	public static void main(String[] args) {
-
-		FitnessLandscape landscape = new FitnessLandscape(20, 3);
-
-		// all same genotypes
-		int[] genotype1 = new NDArrayManager().array1dNums(30, 0);
-		int[] genotype2 = new NDArrayManager().array1dNums(30, 1);
-
-		// half half genotypes
-		int[] genotype3 = new int[30];
-		int[] genotype4 = new int[30];
-		for (int i = 0; i < 15; i++) {
-			genotype3[i] = 0;
-			genotype4[i] = 1;
-		}
-		for (int i = 15; i < 30; i++) {
-			genotype3[i] = 1;
-			genotype4[i] = 0;
-		}
-
-		// three section genotypes
-		int[] genotype5 = new int[30];
-		int[] genotype6 = new int[30];
-		for (int i = 0; i < 10; i++) {
-			genotype5[i] = 0;
-			genotype6[i] = 1;
-		}
-		for (int i = 10; i < 20; i++) {
-			genotype5[i] = 1;
-			genotype6[i] = 0;
-		}
-		for (int i = 20; i < 30; i++) {
-			genotype5[i] = 0;
-			genotype6[i] = 1;
-		}
-
-		// construct all
-		LearningStrategy strat1 = new LearningStrategy(landscape, genotype1);
-		LearningStrategy strat2 = new LearningStrategy(landscape, genotype2);
-		LearningStrategy strat3 = new LearningStrategy(landscape, genotype3);
-		LearningStrategy strat4 = new LearningStrategy(landscape, genotype4);
-		LearningStrategy strat5 = new LearningStrategy(landscape, genotype5);
-		LearningStrategy strat6 = new LearningStrategy(landscape, genotype6);
-
-		// execute all
-		strat1.executeStrategy();
-		strat2.executeStrategy();
-		strat3.executeStrategy();
-		strat4.executeStrategy();
-		strat5.executeStrategy();
-		strat6.executeStrategy();
-
-		// instantiate writer and file
-		PrintWriter csvWriter;
-		File csvFile = new File("src/plot_data.csv");
-
-		// create file, disregard overwriting
-		try {
-			csvFile.createNewFile();
-		} catch (IOException e) {
-			System.err.println("CSV file not created");
-		}
-
-		// write data
-		try {
-			csvWriter = new PrintWriter(csvFile);
-
-			// first row
-			csvWriter.print("step,fitness\n");
-
-			// each row is a step
-			for (int stepNum = 0; stepNum < strat1.fitnessArray.length; stepNum++) {
-
-				csvWriter.printf("%d,%f,%f,%f,%f,%f,%f\n", stepNum, strat1.fitnessArray[stepNum],
-						strat2.fitnessArray[stepNum], strat3.fitnessArray[stepNum], strat4.fitnessArray[stepNum],
-						strat5.fitnessArray[stepNum], strat6.fitnessArray[stepNum]);
-			}
-
-			//
-			System.out.println();
-			System.out.println("Learning data successfully written to plot_data.csv");
-			System.out.println();
-
-			// close writer
-			csvWriter.flush();
-			csvWriter.close();
-
-		} catch (FileNotFoundException e) {
-			System.err.println("CSV file not found");
-		}
-
-	}
-
-	public static final int highestNumStrategy = 1;
+	public static final int highestNumStrategy = 1; //The highest number of the strategy bitstring
 
 	public FitnessLandscape landscape; // This LearningStrategy's NKFL
 	public int currentStep = -1; // The most recently executed step of the strategy (starts at -1 because step 0
@@ -127,6 +33,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	public double currentFitness; // the current fitness of the genotype
 	public int[] originalGenotype;
 	public double originalFitness; // save this data so we don't have to recompute it every time we reset
+	public boolean hillClimbSteepest = false;
 
 	/**
 	 * Initializes a LearningStrategy with the specified strategyArray
@@ -134,7 +41,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	 * @param landscape     the FitnessLandscape of the LearningStrategy
 	 * @param strategyArray the array representing the strategy
 	 */
-	public LearningStrategy(FitnessLandscape landscape, int[] strategyArray) {
+	public LearningStrategy(FitnessLandscape landscape, int[] strategyArray, boolean hillClimbSteepest) {
 		this.landscape = landscape;
 		this.strategyArray = strategyArray;
 
@@ -143,6 +50,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 
 		this.originalGenotype = NDArrayManager.copyArray1d(genotype);
 		this.originalFitness = currentFitness;
+		this.hillClimbSteepest = hillClimbSteepest;
 
 		if(strategyArray != null)
 		{
@@ -156,8 +64,8 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	 * @param landscape      the FitnessLandscape of the LearningStrategy
 	 * @param strategyLength the desired length of the strategy
 	 */
-	public LearningStrategy(FitnessLandscape landscape, int strategyLength) {
-		this(landscape, null);
+	public LearningStrategy(FitnessLandscape landscape, int strategyLength, boolean hillClimbSteepest) {
+		this(landscape, null, hillClimbSteepest);
 
 		strategyArray = NDArrayManager.array1dRandInt(strategyLength, highestNumStrategy + 1);
 
@@ -181,7 +89,14 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 			if (strategyArray[currentStep] == 0) {
 				this.randomWalk(1);
 			} else if (strategyArray[currentStep] == 1) {
-				this.steepestClimb(1);
+				if(hillClimbSteepest)
+				{
+					this.steepestClimb(1);					
+				}
+				else
+				{
+					this.hillClimb(1);
+				}
 			} else if (strategyArray[currentStep] > highestNumStrategy) {
 				System.err.println(
 						"Did not recognize bit " + strategyArray[currentStep] + " in strategy[" + currentStep + "]");
@@ -214,6 +129,11 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	public double executeStep() {
 		return executeSteps(1);
 	}
+	
+	public void setHillClimbSteepest(boolean steep)
+	{
+		hillClimbSteepest = steep;
+	}
 
 	/**
 	 * Randomly walks around the FitnessLandscape
@@ -241,6 +161,11 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		this.currentFitness = landscape.fitness(genotype);
 	}
 	
+	/**
+	 * Climbs to a random neighbor, if its fitness is lower it goes back
+	 * 
+	 * @param steps number of hill climb steps to take
+	 */
 	private void hillClimb(int steps) {
 		int changeIndex = SeededRandom.rnd.nextInt(genotype.length);
 		genotype[changeIndex] = (genotype[changeIndex] + 1) % 2;
@@ -254,12 +179,20 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		}
 	}
 
+	/**
+	 * Resets the strategy to its state before running
+	 */
 	public void resetStrategy() {
 		this.genotype = NDArrayManager.copyArray1d(this.originalGenotype);
 		this.currentStep = -1;
 		this.currentFitness = originalFitness;
 	}
 
+	/**
+	 * Changes the inital starting genotype, then calls resetStrategy()
+	 * 
+	 * @param genotype new starting genotype
+	 */
 	public void setOriginalGenotype(int[] genotype) {
 		this.originalGenotype = genotype;
 		this.originalFitness = landscape.fitness(originalGenotype);
@@ -314,7 +247,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	 */
 	public LearningStrategy getDirectChild() {
 		int[] childStrat = NDArrayManager.copyArray1d(this.strategyArray);
-		return new LearningStrategy(landscape, childStrat);
+		return new LearningStrategy(landscape, childStrat, this.hillClimbSteepest);
 	}
 	
 	public int getStrategyLength() {
@@ -325,10 +258,21 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		return strategyArray[i];
 	}
 	
+	public boolean getHillClimbSteepest() {
+		return hillClimbSteepest;
+	}
+	
+	/**
+	 * Randomly mutates step i of the strategy array
+	 * @param i
+	 */
 	public void mutateStep(int i) {
 		strategyArray[i] = SeededRandom.rnd.nextInt(highestNumStrategy + 1);
 	}
 
+	/**
+	 * Compares fitness for sorting
+	 */
 	@Override
 	public int compareTo(LearningStrategy otherStrategy) {
 		if(this.currentFitness > otherStrategy.currentFitness)

@@ -4,25 +4,49 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * The StrategyGeneration class represents a group of
+ * learning strategies, and is intended to be used in an evolution simulation
+ * 
+ * @author Jacob Ashworth
+ *
+ */
 public class StrategyGeneration {
 	
 	public ArrayList<LearningStrategy> strategies = new ArrayList<LearningStrategy>();
 	public FitnessLandscape landscape;
 	public int strategyLength;
+	public boolean hillClimbSteepest;
 	
-	public StrategyGeneration(FitnessLandscape landscape, int numStrategies, int strategyLength)
+	/**
+	 * Declares a strategy generation with a given landscape, number of strategies,
+	 * and strategy length.  The LearningStrategies are then randomly generated.
+	 * 
+	 * @param landscape FitnessLandscape
+	 * @param numStrategies Number of strategies
+	 * @param strategyLength Length of the strategies
+	 */
+	public StrategyGeneration(FitnessLandscape landscape, int numStrategies, int strategyLength, boolean hillClimbSteepest)
 	{
 		this.landscape = landscape;
 		this.strategyLength = strategyLength;
+		this.hillClimbSteepest = hillClimbSteepest;
 		
 		for(int i = 0; i < numStrategies; i++)
 		{
-			strategies.add(new LearningStrategy(landscape, strategyLength));
+			strategies.add(new LearningStrategy(landscape, strategyLength, hillClimbSteepest));
 		}
 	}
 	
-	public StrategyGeneration(ArrayList<LearningStrategy> strategies)
+	/**
+	 * Declares a strategy generation from an arraylist of strategies
+	 * 
+	 * @param strategies
+	 */
+	public StrategyGeneration(ArrayList<LearningStrategy> strategies, boolean hillClimbSteepest)
 	{
 		this.strategies = strategies;
 		if(strategies.size() == 0)
@@ -34,6 +58,9 @@ public class StrategyGeneration {
 		strategyLength = strategies.get(0).strategyArray.length;
 	}
 	
+	/**
+	 * 
+	 */
 	public void resetStrategies() {
 		for(LearningStrategy strategy : strategies)
 		{
@@ -51,7 +78,7 @@ public class StrategyGeneration {
 	public void randomizeOriginalGenotypes() {
 		for(LearningStrategy strategy : strategies)
 		{
-			strategy.setOriginalGenotype(NDArrayManager.array1dRandInt(landscape.n, 1));
+			strategy.setOriginalGenotype(NDArrayManager.array1dRandInt(landscape.n, 2));
 		}
 	}
 	
@@ -89,6 +116,10 @@ public class StrategyGeneration {
 		return strategies.get(index);
 	}
 	
+	public boolean getHillClimbSteepest() {
+		return hillClimbSteepest;
+	}
+	
 	public void mutateGeneration(double mutationPercentage)
 	{
 		for(LearningStrategy strategy : strategies)
@@ -109,6 +140,23 @@ public class StrategyGeneration {
 		Collections.reverse(strategies);//Greatest first
 	}
 	
+	public Map<Integer, Integer> frequencyOfStrategyMap() {
+		Map<Integer, Integer> freqMap = new HashMap<Integer, Integer>();
+		for(LearningStrategy strategy : strategies)
+		{
+			Integer strat = FitnessLandscape.gen2ind(strategy.genotype);
+			if(!freqMap.containsKey(strat))
+			{
+				freqMap.put(strat, 1);
+			}
+			else
+			{
+				freqMap.put(strat, freqMap.get(strat) + 1);
+			}
+		}
+		return freqMap;
+	}
+	
 	public double getPercentWithStepAtIndex(int step, int index)
 	{
 		int numMatches = 0;
@@ -120,5 +168,17 @@ public class StrategyGeneration {
 			}
 		}
 		return (double)numMatches / (double)strategies.size();
+	}
+	
+	public static double averageFitnessOfStrategy(int[] strategy, FitnessLandscape landscape, int sampleSize, boolean hillClimbSteepest)
+	{
+		ArrayList<LearningStrategy> strats = new ArrayList<LearningStrategy>();
+		for(int i = 0; i < sampleSize; i++)
+		{
+			strats.add(new LearningStrategy(landscape, NDArrayManager.copyArray1d(strategy), hillClimbSteepest));
+		}
+		StrategyGeneration test = new StrategyGeneration(strats, true);
+		test.runAllStrategies();
+		return test.averageFitness();
 	}
 }

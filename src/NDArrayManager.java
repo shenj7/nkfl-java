@@ -25,12 +25,10 @@ public class NDArrayManager {
 	 */
 	public static int[][] array2dRandInt(int dim1, int dim2, int randIntBound) {
 
-		Random randomizer = new Random();
-
 		int[][] randIntArray2d = new int[dim1][dim2];
 		for (int indx1 = 0; indx1 < dim1; indx1++) {
 			for (int indx2 = 0; indx2 < dim2; indx2++) {
-				randIntArray2d[indx1][indx2] = randomizer.nextInt(randIntBound);
+				randIntArray2d[indx1][indx2] = SeededRandom.rnd.nextInt(randIntBound);
 			}
 		}
 
@@ -60,12 +58,9 @@ public class NDArrayManager {
 	 * @return int[] The constructed 1D array
 	 */
 	public static int[] array1dRandInt(int dim1, int randIntBound) {
-
-		Random randomizer = new Random();
-
 		int[] randIntArray1d = new int[dim1];
 		for (int indx1 = 0; indx1 < dim1; indx1++) {
-			randIntArray1d[indx1] = randomizer.nextInt(randIntBound);
+			randIntArray1d[indx1] = SeededRandom.rnd.nextInt(randIntBound);
 		}
 
 		return randIntArray1d;
@@ -80,7 +75,11 @@ public class NDArrayManager {
 	public static int[] copyArray1d(int[] array) {
 
 		int[] newArray = new int[array.length];
-		System.arraycopy(array, 0, newArray, 0, array.length);
+//		System.arraycopy(array, 0, newArray, 0, array.length);
+		for(int i = 0; i < array.length; i++)
+		{
+			newArray[i] = array[i];
+		}
 
 		return newArray;
 	}
