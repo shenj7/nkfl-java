@@ -12,16 +12,20 @@ public class ExperimentRunner {
 		//Experiment Variables
 		int numGenerations = 100;
 		int popsPerGeneration = 100;
-		int childrenPercentage = 50;
+		int childrenPercentage = 75;
 		double mutationPercentage = 2;
 		int strategyLength = 15;
 		int simulations = 1;
-		int n = 20;
+		int n = 15;
 		int k = 6;
 		int incrementCSVoutput = 10;
 		boolean hillClimbSteepest = true;
 		long seed = SeededRandom.rnd.nextLong();
+		String experimentName = "Experiment_" + seed;
 		SeededRandom.rnd.setSeed(seed);
+		
+		final String CSVOutputParamatersHeader = "EXPERIMENT_PARAMS";
+//		final String New
 		
 		ArrayList<EvolutionSimulation> sims = new ArrayList<EvolutionSimulation>();
 		for(int sample = 0; sample < simulations; sample++)
@@ -45,7 +49,7 @@ public class ExperimentRunner {
 		
 		//CSV export setup
 		PrintWriter csvWriter;
-		File csvFile = new File("src/sim_data.csv");
+		File csvFile = new File("data/" + experimentName + ".csv");
 		try {
 			csvFile.createNewFile();
 		} catch (IOException e) {
@@ -55,63 +59,19 @@ public class ExperimentRunner {
 			csvWriter = new PrintWriter(csvFile);
 
 			// first row (output simulation params to the csv)
-			csvWriter.printf("generations:%d,popsPerGen:%d,childrenPercentage:%d,mutationRate:%f,strategyLength:%d,SimulationsRun:%d,N:%d K:%d,HillClimbSteepest:%b,Seed:%d\n",numGenerations,popsPerGeneration,childrenPercentage,mutationPercentage,strategyLength,simulations,n,k,hillClimbSteepest,seed);
+			csvWriter.printf(CSVOutputParamatersHeader + ",%d,%d,%d,generations:%d,popsPerGen:%d,childrenPercentage:%d,mutationRate:%f,strategyLength:%d,SimulationsRun:%d,N:%d K:%d,HillClimbSteepest:%b,Seed:%d\n",simulations,numGenerations/incrementCSVoutput,strategyLength,numGenerations,popsPerGeneration,childrenPercentage,mutationPercentage,strategyLength,simulations,n,k,hillClimbSteepest,seed);
 			
-			
-			//Writes average of multiple simulations (currently unused)--------------------------------------------------------------------------------
-			// second row (column headers)
-//			csvWriter.print("gen_num,avg_fit,");
-//			for(int step = 0; step < strategyLength; step++)
-//			{
-//				csvWriter.print("step " + step + ",");
-//			}
-//			csvWriter.print("\n");
-			
-			// each row is a step, output the data from the average of the simulations
-//			for (int gen = 0; gen < sims.get(0).generations.size(); gen+=incrementCSVoutput) {
-//
-//				//Calculate and output the average fitness from all simulations
-//				double fitAvg = 0;
-//				for(EvolutionSimulation sim : sims)
-//				{
-//					fitAvg += sim.generations.get(gen).averageFitness();
-//				}
-//				fitAvg /= sims.size();
-//				csvWriter.printf("%d,%f,", gen, fitAvg);
-//				
-//
-//				for(int step = 0; step < 14; step++)
-//				{
-//					double percentAtIndexAvg = 0;
-//					for(EvolutionSimulation sim : sims)
-//					{
-//						percentAtIndexAvg += sim.generations.get(gen).getPercentWithStepAtIndex(1, step);
-//					}
-//					percentAtIndexAvg /= sims.size();
-//					
-//					csvWriter.printf("%f,", percentAtIndexAvg);
-//				}
-//				double percentAtIndexAvg = 0;
-//				for(EvolutionSimulation sim : sims)
-//				{
-//					percentAtIndexAvg += sim.generations.get(gen).getPercentWithStepAtIndex(1, 14);
-//				}
-//				percentAtIndexAvg /= sims.size();
-//				csvWriter.printf("%f\n", percentAtIndexAvg);
-//			}
-//			csvWriter.print("\n\n\n\n");
-//			--------------------------------------------------------------------------------------------------------------------------------------------
-			
+					
 			for(int i = 0; i < sims.size(); i++)
 			{
-				csvWriter.printf("Experiment Number: %d\n", i);
+				csvWriter.printf("Experiment Number: ,%d\n", i);
 				ExperimentRunner.writeExperimentToCSV(csvWriter, sims.get(i), incrementCSVoutput);
 				ExperimentRunner.writeExpermentPureHCComparison(csvWriter, sims.get(i), hillClimbSteepest);
 			}
 
 			//
 			System.out.println();
-			System.out.println("Successfully written to sim_data.csv");
+			System.out.println("Successfully written to " + experimentName + ".csv");
 			System.out.println();
 
 			// close writer
