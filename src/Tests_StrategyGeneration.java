@@ -1,6 +1,7 @@
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -9,67 +10,51 @@ import junit.framework.Assert;
 
 class Tests_StrategyGeneration {
 
-//	@Test
+	@Test
 	void testBasicGenerationDeclaration() {
 		FitnessLandscape landscape = new FitnessLandscape(15, 3);
-		StrategyGeneration gen = new StrategyGeneration(landscape, 1000, 10);
-		Assertions.assertEquals(1000, gen.strategies.size());
-		Assertions.assertEquals(gen.landscape, landscape);
-		Assertions.assertEquals(10, gen.strategies.get(0).strategyArray.length);
-	}
-	
-//	@Test
-	void testDeterminedGenerationDeclaration() {
-		FitnessLandscape landscape = new FitnessLandscape(15, 3);
-		ArrayList<LearningStrategy> strats = new ArrayList<LearningStrategy>();
-		for(int i = 0; i < 1000; i++)
-		{
-			strats.add(new LearningStrategy(landscape, 10));
-		}
-		StrategyGeneration gen = new StrategyGeneration(strats);
+		StrategyGeneration gen = new StrategyGeneration(landscape, 1000, 10, true);
 		Assertions.assertEquals(1000, gen.strategies.size());
 		Assertions.assertEquals(gen.landscape, landscape);
 		Assertions.assertEquals(10, gen.strategies.get(0).strategyArray.length);
 	}
 	
 	@Test
-	void runGenerationAnalysis() {
-		FitnessLandscape landscape = new FitnessLandscape(15, 6);
-		int steps = 15;
-		int strategiesPerGeneration = 100000;
-		
-		//Choose the strategies to make
-		ArrayList<int[]> strategies = new ArrayList<int[]>();
-		//Set up the strategies list to do exclusive seperated strategies (like [0, 0, 1, 1] or [1, 0, 0, 0]
-		int[] constructorArray = new int[steps];
-		for(int i = 0; i < steps; i++)
+	void testDeterminedGenerationDeclaration() {
+		FitnessLandscape landscape = new FitnessLandscape(15, 3);
+		ArrayList<LearningStrategy> strats = new ArrayList<LearningStrategy>();
+		for(int i = 0; i < 1000; i++)
 		{
-			constructorArray[i] = 0;
+			strats.add(new LearningStrategy(landscape, 10, true));
 		}
-		strategies.add(NDArrayManager.copyArray1d(constructorArray));
-		for(int i = 0; i < steps; i++)
+		StrategyGeneration gen = new StrategyGeneration(strats, true);
+		Assertions.assertEquals(1000, gen.strategies.size());
+		Assertions.assertEquals(gen.landscape, landscape);
+		Assertions.assertEquals(10, gen.strategies.get(0).strategyArray.length);
+	}
+	
+	@Test
+	void testSorting() {
+		FitnessLandscape landscape = new FitnessLandscape(20, 3);
+		ArrayList<LearningStrategy> strategyList = new ArrayList<LearningStrategy>();
+		for(int i = 0; i < 10; i++)
 		{
-			constructorArray[i] = 1;
-			strategies.add(NDArrayManager.copyArray1d(constructorArray));
-		}
-		for(int i = 0; i < steps; i++)
-		{
-			constructorArray[i] = 0;
-			strategies.add(NDArrayManager.copyArray1d(constructorArray));
+			strategyList.add(new LearningStrategy(landscape, 10, true));
 		}
 		
-		//Run all the strategies
-		System.out.println("Running analysis on " + strategies.size() + " strategies with sample size " + strategiesPerGeneration);
-		for(int[] strategy : strategies)
+		StrategyGeneration gen = new StrategyGeneration(strategyList, true);
+		
+		gen.runAllStrategies();
+		gen.sortStrategies();
+		
+		System.out.print("Sorted random fitnesses: ");
+		double prevStrat = 1;
+		for(int i = 0; i < 10; i++)
 		{
-			ArrayList<LearningStrategy> strats = new ArrayList<LearningStrategy>();
-			for(int i = 0; i < strategiesPerGeneration; i++)
-			{
-				strats.add(new LearningStrategy(landscape, strategy));
-			}
-			StrategyGeneration gen = new StrategyGeneration(strats);
-			gen.runAllStrategies();
-			System.out.println("Average final fitness for " + NDArrayManager.array1dAsString(strategy) + " was " + gen.averageFitness());
+			Assert.assertTrue(gen.getStrategyAtIndex(i).currentFitness <= prevStrat);
+			prevStrat = strategyList.get(i).currentFitness;
+			System.out.print(prevStrat + " ");
 		}
+		System.out.println("");
 	}
 }

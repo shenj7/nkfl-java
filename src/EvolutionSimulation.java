@@ -14,13 +14,14 @@ public class EvolutionSimulation {
 	int childrenPerGeneration;
 	double mutationPercentage; //% mutation rate
 	int strategyLength;
+	boolean hillClimbSteepest;
 	FitnessLandscape landscape;
 	
 	//Instance variables
 	public ArrayList<StrategyGeneration> generations = new ArrayList<StrategyGeneration>();
 	//generations ArrayList contains which step we are on
 	
-	public EvolutionSimulation(FitnessLandscape landscape, int popsPerGeneration, int numGenerations, double mutationPercentage, int strategyLength, double percentNewPerGeneration)
+	public EvolutionSimulation(FitnessLandscape landscape, int popsPerGeneration, int numGenerations, double mutationPercentage, int strategyLength, double percentNewPerGeneration, boolean hillClimbSteepest)
 	{
 		this.landscape = landscape;
 		this.popsPerGeneration = popsPerGeneration;
@@ -28,12 +29,13 @@ public class EvolutionSimulation {
 		this.mutationPercentage = mutationPercentage;
 		this.childrenPerGeneration = (int) ((double)popsPerGeneration * (double)percentNewPerGeneration / 100);
 		this.strategyLength = strategyLength;
+		this.hillClimbSteepest = hillClimbSteepest;
 		setupSimulation();
 	}
 	
 	public void setupSimulation()
 	{
-		StrategyGeneration gen0 = new StrategyGeneration(landscape, popsPerGeneration, strategyLength);
+		StrategyGeneration gen0 = new StrategyGeneration(landscape, popsPerGeneration, strategyLength, hillClimbSteepest);
 		generations.add(gen0);
 		gen0.runAllStrategies();
 	}
@@ -53,49 +55,5 @@ public class EvolutionSimulation {
 			nextGen.runAllStrategies();
 		}
 //		writeExperimentToCSV();
-	}
-	
-	public void writeExperimentToCSV() {
-		PrintWriter csvWriter;
-		File csvFile = new File("src/sim_data.csv");
-		
-		try {
-			csvFile.createNewFile();
-		} catch (IOException e) {
-			System.err.println("CSV file not created");
-		}
-		
-		try {
-			csvWriter = new PrintWriter(csvFile);
-
-			// first row (simulation params)
-			csvWriter.printf("generations:%d,popsPerGen:%d,childrenPerGen:%d,mutationRate:%f,strategyLength:%d\n",numGenerations,popsPerGeneration,childrenPerGeneration,mutationPercentage,strategyLength);
-			// second row (column headers)
-			csvWriter.print("gen_num,avg_fit,s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14\n");
-
-			int incrementBy = 10;
-			// each row is a step
-			for (int gen = 0; gen < generations.size(); gen+=incrementBy) {
-
-				csvWriter.printf("%d,%f,", gen, generations.get(gen).averageFitness());
-				for(int step = 0; step < 14; step++)
-				{
-					csvWriter.printf("%f,", generations.get(gen).getPercentWithStepAtIndex(1, step));
-				}
-				csvWriter.printf("%f\n", generations.get(gen).getPercentWithStepAtIndex(1, 14));
-			}
-
-			//
-			System.out.println();
-			System.out.println("Successfully written to sim_data.csv");
-			System.out.println();
-
-			// close writer
-			csvWriter.flush();
-			csvWriter.close();
-
-		} catch (FileNotFoundException e) {
-			System.err.println("CSV file not found");
-		}
 	}
 }

@@ -34,7 +34,7 @@ public class StrategyGenerationFactory {
 			LearningStrategy newChild = StrategyGenerationFactory.truncateParents(parent1, parent2, truncationIndex);
 			childrenStrategies.add(newChild);
 		}
-		return new StrategyGeneration(childrenStrategies);
+		return new StrategyGeneration(childrenStrategies, parents.getHillClimbSteepest());
 	}
 	
 	//TruncateIndex will be where p2 starts (so [0,0,0] and [1,1,1] truncated at 1 = [0,1,1])
@@ -58,6 +58,6 @@ public class StrategyGenerationFactory {
 			childStrategyArray[i] = p2.getStepAtIndex(i);
 		}
 		
-		return new LearningStrategy(p1.landscape, childStrategyArray);
+		return new LearningStrategy(p1.landscape, childStrategyArray, p1.getHillClimbSteepest());
 	}
 }
