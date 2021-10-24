@@ -63,29 +63,43 @@ with open(filename) as csvfile:
                     experimentData[experimentNumber][4][genRowNumber][i-2] = float(row[i])
             genRowNumber = genRowNumber + 1
 
+averageFitnesses = []
+for i in range(int(experimentParamaters[2])):
+    averageFitnesses.append(experimentData[i][2][10])
 
-print("Comparison :" + str(experimentData[0][1]) + ", evolved: " + str(experimentData[0][2][9]))
+textStr = "Evolved Fitness:" + str(np.average(averageFitnesses)) + "\nSHC Fitness:" + str(experimentData[0][1])
 
 #get our data to graph
 numGenerations = int(experimentParamaters[2])
+numRunsFromEachStart = 100 #hardcoded for now
 colors = cm.get_cmap('RdYlGn') #copper is pretty neat
 numColors = colors.N
 numColorsToIteratePerGeneration = colors.N / numGenerations
 
 #get our generations to graph
 generations = []
-for i in range(numGenerations):
-    generations.append(experimentData[0][4][i])
+for i in range(numRunsFromEachStart):
+    generations.append(experimentData[i][4][numGenerations-1]) #grab the last generation of this run
 
+stepFrequencies = []
+for i in range(15):
+    stepFrequencies.append([])
+    for j in range(numRunsFromEachStart):
+        stepFrequencies[i].append(generations[j][i])
+
+#set up our plot
 fig, ax = plt.subplots()
-#set up out plot
-ax.set_title("1 landscape 1 location 1 evolution")
+ax.set_title("1 NKFL 1 Start Location 100 Evolution Runs")
 ax.set_xlabel("Step Number")
 ax.set_ylabel("Average frequency of SHC steps")
 
+#add text to plot
+props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+ax.text(0.02, 0.99, textStr, transform=ax.transAxes, fontsize=10,
+        verticalalignment='top', bbox=props)
+
 #actually make the graph
-for i in range(numGenerations):
-  ax.plot([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],generations[i],color=colors(i*30))
+ax.violinplot(stepFrequencies, [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], True, 0.7)
 
 
 #show the graph
