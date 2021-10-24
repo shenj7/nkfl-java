@@ -12,7 +12,7 @@ public class StrategyGenerationFactory {
 //		System.out.println("Result of truncation: " + NDArrayManager.array1dAsString(kid.strategyArray));
 //	}
 	
-	public static StrategyGeneration generateTruncation(StrategyGeneration parents, int numChildren) {
+	public static StrategyGeneration generateTruncation(StrategyGeneration parents, int numChildren, int[] startingLocation) {
 		parents.sortStrategies();
 		
 		ArrayList<LearningStrategy> childrenStrategies = new ArrayList<LearningStrategy>();
@@ -34,7 +34,9 @@ public class StrategyGenerationFactory {
 			LearningStrategy newChild = StrategyGenerationFactory.truncateParents(parent1, parent2, truncationIndex);
 			childrenStrategies.add(newChild);
 		}
-		return new StrategyGeneration(childrenStrategies, parents.getHillClimbSteepest());
+		StrategyGeneration childGeneration = new StrategyGeneration(childrenStrategies, parents.getHillClimbSteepest());
+		childGeneration.setOriginalGenotypes(startingLocation);
+		return childGeneration;
 	}
 	
 	//TruncateIndex will be where p2 starts (so [0,0,0] and [1,1,1] truncated at 1 = [0,1,1])

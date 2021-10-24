@@ -44,7 +44,7 @@ with open(filename) as csvfile:
         elif(row[0] == experimentParamatersHeader):
             experimentParamaters = row
         elif(row[0].startswith('Experiment Number: ')):
-            experimentNumber = int(row[1])
+            experimentNumber = int(row[2])
             experimentData.append([experimentNumber, -1])
             genRowNumber = 0
             experimentData[experimentNumber].append(np.zeros(int(experimentParamaters[2]), dtype=float)) #2
@@ -65,18 +65,28 @@ with open(filename) as csvfile:
 
 
 print("Comparison :" + str(experimentData[0][1]) + ", evolved: " + str(experimentData[0][2][9]))
-#print(experimentData)
-lines = []
 
-for i in range(10):
-    lines.append(experimentData[0][4][i])
+#get our data to graph
+numGenerations = int(experimentParamaters[2])
+colors = cm.get_cmap('RdYlGn') #copper is pretty neat
+numColors = colors.N
+numColorsToIteratePerGeneration = colors.N / numGenerations
 
-lsp = np.linspace(0, 10, 100)
+#get our generations to graph
+generations = []
+for i in range(numGenerations):
+    generations.append(experimentData[0][4][i])
 
-colors = cm.get_cmap('copper')
+fig, ax = plt.subplots()
+#set up out plot
+ax.set_title("1 landscape 1 location 1 evolution")
+ax.set_xlabel("Step Number")
+ax.set_ylabel("Average frequency of SHC steps")
 
-for i in range(10):
-    plt.plot([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],lines[i],color=colors(i*30))
-# plt.xlabel([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14])
-# plt.ylabel([0,0.25,0.5,0.75,1])
+#actually make the graph
+for i in range(numGenerations):
+  ax.plot([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],generations[i],color=colors(i*30))
+
+
+#show the graph
 plt.show()

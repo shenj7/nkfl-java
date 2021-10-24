@@ -45,7 +45,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		this.landscape = landscape;
 		this.strategyArray = strategyArray;
 
-		genotype = NDArrayManager.array1dRandInt(landscape.n, 1);
+		genotype = NDArrayManager.array1dRandInt(landscape.n, 2);
 		this.currentFitness = landscape.fitness(genotype);
 
 		this.originalGenotype = NDArrayManager.copyArray1d(genotype);
@@ -194,7 +194,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	 * @param genotype new starting genotype
 	 */
 	public void setOriginalGenotype(int[] genotype) {
-		this.originalGenotype = genotype;
+		this.originalGenotype = NDArrayManager.copyArray1d(genotype);
 		this.originalFitness = landscape.fitness(originalGenotype);
 		this.resetStrategy();
 	}
