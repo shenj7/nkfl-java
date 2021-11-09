@@ -58,6 +58,18 @@ public class StrategyGeneration {
 		strategyLength = strategies.get(0).strategyArray.length;
 	}
 	
+	public StrategyGeneration getGenerationOfTopPercent(double percent)
+	{
+		this.sortStrategies();
+		int numInTopPercent = (int) Math.floor(strategies.size() * (percent / 100.0));
+		ArrayList<LearningStrategy> topStrategies = new ArrayList<LearningStrategy>();
+		for(int i = 0; i < numInTopPercent; i++)
+		{
+			topStrategies.add(strategies.get(i));
+		}
+		return new StrategyGeneration(topStrategies, hillClimbSteepest);
+	}
+	
 	/**
 	 * 
 	 */
@@ -98,6 +110,43 @@ public class StrategyGeneration {
 		return sumOfFitnesses / strategies.size();
 	}
 	
+	public double averageFitnessRELIABILITY(int reliabilitySampleSize)
+	{
+		double sumOfFitnesses = 0;
+		for(LearningStrategy strategy : strategies)
+		{
+			LearningStrategy stratTester = strategy.getDirectChild();
+			for(int i = 0; i < reliabilitySampleSize; i++)
+			{
+				stratTester.executeStrategy();
+				sumOfFitnesses += stratTester.currentFitness;
+				stratTester.resetStrategy();
+			}
+		}
+		return sumOfFitnesses / ((double)strategies.size() * (double)reliabilitySampleSize);
+	}
+	
+	public double averageFitnessAtStep(int step) {
+		double sumOfFitnesses = 0;
+		for(LearningStrategy strategy : strategies)
+		{
+			sumOfFitnesses += strategy.getFitnessAtStep(step);
+		}
+		return sumOfFitnesses / strategies.size();
+	}
+	
+	public double getPercentStuckAtLocalOptima(int step) {
+		double numStuckAtArray = 0;
+		for(LearningStrategy strategy : strategies)
+		{
+			if(strategy.stuckAtOptimaArray[step] == true)
+			{
+				numStuckAtArray++;
+			}
+		}
+		return numStuckAtArray / strategies.size();
+	}
+	
 	public int getNumStrategies() {
 		return strategies.size();
 	}
@@ -120,10 +169,11 @@ public class StrategyGeneration {
 		return hillClimbSteepest;
 	}
 	
-	public void mutateGeneration(double mutationPercentage)
+	public void mutateGeneration(double mutationPercentage, int childrenPerGeneration)
 	{
-		for(LearningStrategy strategy : strategies)
+		for(int child = strategies.size()-1; child >= strategies.size() - childrenPerGeneration; child--)
 		{
+			LearningStrategy strategy = strategies.get(child);
 			for(int i = 0; i < strategy.getStrategyLength(); i++)
 			{
 				double roll = SeededRandom.rnd.nextDouble() * 100;

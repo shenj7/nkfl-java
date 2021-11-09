@@ -8,27 +8,15 @@ from matplotlib import cm
 from collections import OrderedDict
 from tkinter.filedialog import askopenfilename
 
+import ExperimentStorer
+import GraphMaker
+
 cmaps=OrderedDict()
 filename = askopenfilename()
 
 experimentParamatersHeader = "EXPERIMENT_PARAMS"
-experimentParamaters = []
-experimentData = []
 
-#Experiment data is stored as follows
-#experimentData[X] will access the xth experiment
-#experimentData[X][X] will access the xth generation of the xth experiment
-#experimentData[X][X][X] will access the xth step of the ... 
-
-#ExperimentData[X] has experiment number at [0], the comparison fitness value at [1], the list of generation fitnesses at [2]. the list of generation numbers at [3], and the list of generations at index [4]
-#ExperimentData[X][Y] is the Yth generation of the Xth experiment, and it is a list of average frequencies of '1' steps
-
-# def initExperimentData():
-#     numExperiments = int(experimentParamaters[1],10)
-#     numGenerationsPerExperiment = int(experimentParamaters[2],10)
-#     numStepsPerStrategy = int(experimentParamaters[3],10)
-#     experimentData = numpy.zeros((numExperiments, numGenerationsPerExperiment, numStepsPerStrategy), dtype=numpy.double)
-
+experimentStorer = 0 #Name of the experiment storer
 
 parent_dir = os.path.split(os.getcwd())[0]
 experimentNumber = -1 #will get set inside of the open loop
@@ -42,65 +30,74 @@ with open(filename) as csvfile:
         if(len(row)==0):
             print("finished parsing data")
         elif(row[0] == experimentParamatersHeader):
-            experimentParamaters = row
+            experimentData = ExperimentStorer.ExperimentStorer(row)
         elif(row[0].startswith('Experiment Number: ')):
-            experimentNumber = int(row[2])
-            experimentData.append([experimentNumber, -1])
-            genRowNumber = 0
-            experimentData[experimentNumber].append(np.zeros(int(experimentParamaters[2]), dtype=float)) #2
-            experimentData[experimentNumber].append(np.zeros(int(experimentParamaters[2]), dtype=int)) #3
-            experimentData[experimentNumber].append([]) #4
+            experimentData.beginAddingExperiment(row)
         elif(row[0].startswith('Comparison: ')):
-            experimentData[experimentNumber][1] = float(row[1])
+            experimentData.finishAddingExperiment(row)
+        elif(row[0].startswith('FITNESS_AT_STEPS')):
+            experimentData.addFitnessArray(row)
+        elif(row[0].startswith('STUCK_AT_LOCAL_OPTIMA')):
+            experimentData.addStuckAtLocalOptimaArray(row)
+        elif(row[0].endswith(':STEP_FREQUENCIES_OF')):
+            experimentData.addStepFrequencyArray(row)
         else:
-            experimentData[experimentNumber][4].append(np.zeros(int(experimentParamaters[3]), dtype=float))
-            for i in range(len(row)):
-                if(i == 0):
-                    experimentData[experimentNumber][3][genRowNumber] = int(row[i])
-                elif(i == 1):
-                    experimentData[experimentNumber][2][genRowNumber] = float(row[i])
-                else:
-                    experimentData[experimentNumber][4][genRowNumber][i-2] = float(row[i])
-            genRowNumber = genRowNumber + 1
+            experimentData.addGenerationToExperiment(row)
 
-averageFitnesses = []
-for i in range(int(experimentParamaters[2])):
-    averageFitnesses.append(experimentData[i][2][10])
 
-textStr = "Evolved Fitness:" + str(np.average(averageFitnesses)) + "\nSHC Fitness:" + str(experimentData[0][1])
+# GraphMaker.makeSingleStrategyPlotAllStepsVsFitness(experimentData)
+GraphMaker.makeSingleStrategyPlotVsFitness(experimentData, 1)
+
 
 #get our data to graph
-numGenerations = int(experimentParamaters[2])
-numRunsFromEachStart = 100 #hardcoded for now
-colors = cm.get_cmap('RdYlGn') #copper is pretty neat
-numColors = colors.N
-numColorsToIteratePerGeneration = colors.N / numGenerations
+# numGenerations = int(experimentParamaters[2])
+# colors = cm.get_cmap('RdYlGn') #copper is pretty neat
+# numColors = colors.N
+# numColorsToIteratePerGeneration = colors.N / numGenerations
 
-#get our generations to graph
-generations = []
-for i in range(numRunsFromEachStart):
-    generations.append(experimentData[i][4][numGenerations-1]) #grab the last generation of this run
+# #temporary, hardcoded values (REFACTOR)
+# numRunsFromEachStart = 10 #hardcoded for now
+# numStarts = 50
+# indexOfLastGeneration = 10
+# numSteps = 100
 
-stepFrequencies = []
-for i in range(15):
-    stepFrequencies.append([])
-    for j in range(numRunsFromEachStart):
-        stepFrequencies[i].append(generations[j][i])
+# #get our generations to graph
+# #get our data to graph
+# numGenerations = int(experimentParamaters[2])
+# numRunsFromEachStart = 100 #hardcoded for now
+# colors = cm.get_cmap('RdYlGn') #copper is pretty neat
+# numColors = colors.N
+# numColorsToIteratePerGeneration = colors.N / numGenerations
 
-#set up our plot
-fig, ax = plt.subplots()
-ax.set_title("1 NKFL 1 Start Location 100 Evolution Runs")
-ax.set_xlabel("Step Number")
-ax.set_ylabel("Average frequency of SHC steps")
+# #get our generations to graph
+# generations = []
+# # for i in range(numRunsFromEachStart):
+# generations.append(experimentData[0][4][numGenerations-1]) #grab the last generation of this run
 
-#add text to plot
-props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-ax.text(0.02, 0.99, textStr, transform=ax.transAxes, fontsize=10,
-        verticalalignment='top', bbox=props)
+# # stepFrequencies = []
+# # for i in range(15):
+# #     stepFrequencies.append([])
+# #     for j in range(numRunsFromEachStart):
+# #         stepFrequencies[i].append(generations[j][i])
 
-#actually make the graph
-ax.violinplot(stepFrequencies, [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], True, 0.7)
+# #set up our plot
+# fig, ax = plt.subplots()
+# ax.set_title("1 NKFL 1 Start Location 1 Evolution Runs K=0")
+# ax.set_xlabel("Step Number")
+# ax.set_ylabel("Average frequency of SHC steps")
+
+# #add text to plot
+# props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+# ax.text(0.02, 0.99, textStr, transform=ax.transAxes, fontsize=10,
+#         verticalalignment='top', bbox=props)
+
+# #actually make the graph
+# ax.plot([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], experimentData[0][4][numGenerations-1])
 
 
-#show the graph
-plt.show()
+# #show the graph
+# plt.show()
+
+
+
+

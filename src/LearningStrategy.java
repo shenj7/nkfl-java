@@ -22,13 +22,16 @@ import java.io.PrintWriter;
  *
  */
 public class LearningStrategy implements Comparable<LearningStrategy>{
-	public static final int highestNumStrategy = 1; //The highest number of the strategy bitstring
+	public static boolean useDependentStrategySteps = false; // '2' and '3'
+	public static boolean useOnlyDependentStrategySteps = false;
 
 	public FitnessLandscape landscape; // This LearningStrategy's NKFL
 	public int currentStep = -1; // The most recently executed step of the strategy (starts at -1 because step 0
 									// hasn't been run yet)
 	public int[] strategyArray; // integer string representing the strategy (0=random walk, 1=steepest climb)
+	public int[] strategyTakenArray;
 	public double[] fitnessArray;
+	public boolean[] stuckAtOptimaArray;
 	public int[] genotype; //
 	public double currentFitness; // the current fitness of the genotype
 	public int[] originalGenotype;
@@ -52,9 +55,11 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		this.originalFitness = currentFitness;
 		this.hillClimbSteepest = hillClimbSteepest;
 
-		if(strategyArray != null)
+		if(this.strategyArray != null)
 		{
 			this.fitnessArray = new double[strategyArray.length];
+			this.stuckAtOptimaArray = new boolean[strategyArray.length];
+			this.strategyTakenArray = new int[strategyArray.length];
 		}
 	}
 
@@ -67,9 +72,26 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	public LearningStrategy(FitnessLandscape landscape, int strategyLength, boolean hillClimbSteepest) {
 		this(landscape, null, hillClimbSteepest);
 
-		strategyArray = NDArrayManager.array1dRandInt(strategyLength, highestNumStrategy + 1);
-
-		fitnessArray = new double[strategyLength];
+		if(useOnlyDependentStrategySteps)
+		{
+			strategyArray = NDArrayManager.array1dRandInt(strategyLength, 2);
+			for(int i = 0; i < strategyArray.length; i++)
+			{
+				strategyArray[i] += 2;
+			}//makes the strategy array 2s and 3s
+		}
+		else if(useDependentStrategySteps)
+		{
+			strategyArray = NDArrayManager.array1dRandInt(strategyLength, 4);
+		}
+		else
+		{
+			strategyArray = NDArrayManager.array1dRandInt(strategyLength, 2);
+		}
+		
+		this.fitnessArray = new double[strategyArray.length];
+		this.stuckAtOptimaArray = new boolean[strategyArray.length];
+		this.strategyTakenArray = new int[strategyArray.length];
 	}
 
 	/**
@@ -87,26 +109,22 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 			currentStep++;
 
 			if (strategyArray[currentStep] == 0) {
-				this.randomWalk(1);
+				this.randomWalk();
 			} else if (strategyArray[currentStep] == 1) {
-				if(hillClimbSteepest)
-				{
-					this.steepestClimb(1);					
-				}
-				else
-				{
-					this.hillClimb(1);
-				}
-			} else if (strategyArray[currentStep] > highestNumStrategy) {
-				System.err.println(
-						"Did not recognize bit " + strategyArray[currentStep] + " in strategy[" + currentStep + "]");
-				return -1;
+				this.climb();
+			} else if (strategyArray[currentStep] == 2 && useDependentStrategySteps)
+			{
+				this.sameStepPrevious();
+			} else if (strategyArray[currentStep] == 3 && useDependentStrategySteps)
+			{
+				this.oppositeStepPrevious();
 			} else {
-				System.err.println("highestNumStrategy is incorrect, please correct method executeSteps");
+				System.err.println("executeSteps method failed...");
 				return -1;
 			}
 
 			fitnessArray[currentStep] = currentFitness;
+			stuckAtOptimaArray[currentStep] = landscape.isLocalMaxima(genotype);
 		}
 
 		return currentFitness;
@@ -140,12 +158,23 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	 * 
 	 * @param steps the number of random steps to take
 	 */
-	private void randomWalk(int steps) {
-		for (int step = 0; step < steps; step++) {
-			int changeIndex = Math.abs(SeededRandom.rnd.nextInt() % (genotype.length)); // pick a random index
-			genotype[changeIndex] = (genotype[changeIndex] + 1) % 2; // flip the location
-		}
+	private void randomWalk() {
+		strategyTakenArray[currentStep] = 0;
+		int changeIndex = Math.abs(SeededRandom.rnd.nextInt() % (genotype.length)); // pick a random index
+		genotype[changeIndex] = (genotype[changeIndex] + 1) % 2; // flip the location
 		this.currentFitness = landscape.fitness(genotype);
+	}
+	
+	private void climb() {
+		strategyTakenArray[currentStep] = 1;
+		if(hillClimbSteepest)
+		{
+			this.steepestClimb();
+		}
+		else
+		{
+			this.hillClimb();
+		}
 	}
 
 	/**
@@ -154,10 +183,8 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	 * 
 	 * @param steps the number of steepest climb steps to take
 	 */
-	private void steepestClimb(int steps) {
-		for (int step = 0; step < steps; step++) {
-			genotype = landscape.greatestNeighbor(genotype);
-		}
+	private void steepestClimb() {
+		genotype = landscape.greatestNeighbor(genotype);
 		this.currentFitness = landscape.fitness(genotype);
 	}
 	
@@ -166,7 +193,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	 * 
 	 * @param steps number of hill climb steps to take
 	 */
-	private void hillClimb(int steps) {
+	private void hillClimb() {
 		int changeIndex = SeededRandom.rnd.nextInt(genotype.length);
 		genotype[changeIndex] = (genotype[changeIndex] + 1) % 2;
 		if(landscape.fitness(genotype) < currentFitness)
@@ -178,7 +205,43 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 			currentFitness = landscape.fitness(genotype);
 		}
 	}
-
+	
+	private void sameStepPrevious() {
+		if(this.currentStep == 0)
+		{
+			this.randomWalk();
+		}
+		else
+		{
+			if(strategyTakenArray[this.currentStep - 1] == 0)
+			{
+				this.randomWalk();
+			}
+			else if(strategyTakenArray[this.currentStep - 1] == 1)
+			{
+				this.climb();
+			}
+		}
+	}
+	
+	private void oppositeStepPrevious() {
+		if(this.currentStep == 0)
+		{
+			this.climb();
+		}
+		else
+		{
+			if(strategyTakenArray[this.currentStep - 1] == 0)
+			{
+				this.climb();
+			}
+			else if(strategyTakenArray[this.currentStep - 1] == 1)
+			{
+				this.randomWalk();
+			}
+		}
+	}
+	
 	/**
 	 * Resets the strategy to its state before running
 	 */
@@ -186,6 +249,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		this.genotype = NDArrayManager.copyArray1d(this.originalGenotype);
 		this.currentStep = -1;
 		this.currentFitness = originalFitness;
+		this.strategyTakenArray = new int[strategyTakenArray.length];
 	}
 
 	/**
@@ -247,7 +311,9 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	 */
 	public LearningStrategy getDirectChild() {
 		int[] childStrat = NDArrayManager.copyArray1d(this.strategyArray);
-		return new LearningStrategy(landscape, childStrat, this.hillClimbSteepest);
+		LearningStrategy child = new LearningStrategy(landscape, childStrat, this.hillClimbSteepest);
+		child.setOriginalGenotype(this.genotype);
+		return child;
 	}
 	
 	public int getStrategyLength() {
@@ -267,7 +333,22 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	 * @param i
 	 */
 	public void mutateStep(int i) {
-		strategyArray[i] = SeededRandom.rnd.nextInt(highestNumStrategy + 1);
+		if(useOnlyDependentStrategySteps)
+		{
+			strategyArray[i] = SeededRandom.rnd.nextInt(2) + 2;
+		}
+		else if(useDependentStrategySteps)
+		{
+			strategyArray[i] = SeededRandom.rnd.nextInt(4);
+		}
+		else
+		{
+			strategyArray[i] = SeededRandom.rnd.nextInt(2);
+		}
+	}
+	
+	public double getFitnessAtStep(int step) {
+		return fitnessArray[step];
 	}
 
 	/**
