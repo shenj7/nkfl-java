@@ -96,7 +96,7 @@ public class NDArrayManager {
 		Arrays.fill(numArray, number);
 
 		return numArray;
-	}
+	} 
 
 	/**
 	 * Computes and returns the mean of a 1D array.

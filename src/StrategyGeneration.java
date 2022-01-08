@@ -199,7 +199,7 @@ public class StrategyGeneration {
 			{
 				freqMap.put(strat, 1);
 			}
-			else
+			else 
 			{
 				freqMap.put(strat, freqMap.get(strat) + 1);
 			}
@@ -218,6 +218,29 @@ public class StrategyGeneration {
 			}
 		}
 		return (double)numMatches / (double)strategies.size();
+	}
+	
+	public double getAverageNumberConsecutiveRWs()
+	{
+		int numConsRws = 0;
+		for(LearningStrategy strategy : strategies)
+		{
+			numConsRws += strategy.getNumConsRws();
+		}
+		return (double)numConsRws / (double)strategies.size();
+	}
+	
+	public int[] numConsecutiveRWsAcrossGeneration()
+	{
+		int[] doubleRWoccurances = new int[strategyLength];
+		for(LearningStrategy strategy : strategies)
+		{
+			for(Integer occurance : strategy.getDoubleStepLocations())
+			{
+				doubleRWoccurances[occurance] += 1;
+			}
+		}
+		return doubleRWoccurances;
 	}
 	
 	public static double averageFitnessOfStrategy(int[] strategy, FitnessLandscape landscape, int sampleSize, boolean hillClimbSteepest)

@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 /**
  * The Learning Strategy class is a single strategy to navigate around a NKFL.
@@ -86,7 +87,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		}
 		else
 		{
-			strategyArray = NDArrayManager.array1dRandInt(strategyLength, 2);
+			strategyArray = NDArrayManager.array1dRandInt(strategyLength, 2); 
 		}
 		
 		this.fitnessArray = new double[strategyArray.length];
@@ -349,6 +350,30 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	
 	public double getFitnessAtStep(int step) {
 		return fitnessArray[step];
+	}
+	
+	public int getNumConsRws() {
+		int num = 0;
+		for(int i = 0; i < strategyArray.length-1; i++)
+		{
+			if(strategyArray[i] == 0 && strategyArray[i+1] == 0)
+			{
+				num++;
+			}
+		}
+		return num;
+	}
+	
+	public ArrayList<Integer> getDoubleStepLocations() {
+		ArrayList<Integer> locs = new ArrayList<Integer>();
+		for(int i = 0; i < strategyArray.length-1; i++)
+		{
+			if(strategyArray[i] == 0 && strategyArray[i+1] == 0)
+			{
+				locs.add(i);
+			}
+		}
+		return locs;
 	}
 
 	/**
