@@ -15,13 +15,16 @@ public class EvolutionSimulation {
 	double mutationPercentage; //% mutation rate
 	int strategyLength;
 	boolean hillClimbSteepest;
+	int[] startingLocation;
 	FitnessLandscape landscape;
+	String simNum = "N/A";
+	String evolutionType = "N/A";
 	
 	//Instance variables
 	public ArrayList<StrategyGeneration> generations = new ArrayList<StrategyGeneration>();
 	//generations ArrayList contains which step we are on
 	
-	public EvolutionSimulation(FitnessLandscape landscape, int popsPerGeneration, int numGenerations, double mutationPercentage, int strategyLength, double percentNewPerGeneration, boolean hillClimbSteepest)
+	public EvolutionSimulation(FitnessLandscape landscape, int popsPerGeneration, int numGenerations, double mutationPercentage, int strategyLength, double percentNewPerGeneration, boolean hillClimbSteepest, int[] startingLocation, String evolutionType)
 	{
 		this.landscape = landscape;
 		this.popsPerGeneration = popsPerGeneration;
@@ -30,12 +33,25 @@ public class EvolutionSimulation {
 		this.childrenPerGeneration = (int) ((double)popsPerGeneration * (double)percentNewPerGeneration / 100);
 		this.strategyLength = strategyLength;
 		this.hillClimbSteepest = hillClimbSteepest;
+		this.startingLocation = startingLocation;
+		this.evolutionType = evolutionType;
 		setupSimulation();
+	}
+	
+	public void setStringNum(String simNum)
+	{
+		this.simNum = simNum;
+	}
+	
+	public String getSimNum()
+	{
+		return simNum;
 	}
 	
 	public void setupSimulation()
 	{
 		StrategyGeneration gen0 = new StrategyGeneration(landscape, popsPerGeneration, strategyLength, hillClimbSteepest);
+		gen0.setOriginalGenotypes(startingLocation);
 		generations.add(gen0);
 		gen0.runAllStrategies();
 	}
@@ -48,8 +64,25 @@ public class EvolutionSimulation {
 			String exgen = NDArrayManager.array1dAsString(generations.get(generations.size() - 1).getStrategyAtIndex(0).strategyArray);
 //			System.out.println("Running gen " + i + " of " + numGenerations + ", average fitness: " + generations.get(generations.size() - 1).averageFitness() + "  " + exgen);
 			//Make the next generation
-			StrategyGeneration nextGen = StrategyGenerationFactory.generateTruncation(generations.get(generations.size() - 1), childrenPerGeneration);
-			nextGen.mutateGeneration(mutationPercentage);
+			StrategyGeneration nextGen;
+			if(evolutionType.toLowerCase().equals("truncation"))
+			{
+				nextGen = StrategyGenerationFactory.generateTruncation(generations.get(generations.size() - 1), childrenPerGeneration, startingLocation);
+			}
+			else if(evolutionType.toLowerCase().equals("ranked_linear"))
+			{
+				nextGen = StrategyGenerationFactory.generateRankedLinear(generations.get(generations.size() - 1), childrenPerGeneration, startingLocation);
+			}
+			else if(evolutionType.toLowerCase().equals("ranked_exponential"))
+			{
+				nextGen = StrategyGenerationFactory.generateRankedExponential(generations.get(generations.size() - 1), childrenPerGeneration, startingLocation);
+			}
+			else
+			{
+				System.err.println("No evolution type chosen");
+				nextGen = null;
+			}
+			nextGen.mutateGeneration(mutationPercentage, childrenPerGeneration);
 			generations.add(nextGen);
 			//Run the next generation
 			nextGen.runAllStrategies();

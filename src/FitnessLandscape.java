@@ -224,6 +224,27 @@ public class FitnessLandscape {
 		return true;
 	}
 	
+	public double testStrategyOnLandscape(int[] strategy, int[] startingLocation, int numTests, boolean hillClimbSteepest)
+	{
+		ArrayList<int[]> strategies = new ArrayList<int[]>();
+		
+		for(int j = 0; j < 10000; j++)
+		{
+			strategies.add(NDArrayManager.copyArray1d(strategy));
+		}
+		ArrayList<LearningStrategy> strats = new ArrayList<LearningStrategy>();
+		for(int x = 0; x < 10000; x++)
+		{
+			strats.add(new LearningStrategy(this, strategies.get(x), hillClimbSteepest));
+		}
+		
+		StrategyGeneration gen = new StrategyGeneration(strats, hillClimbSteepest);
+		gen.setOriginalGenotypes(startingLocation);
+		gen.runAllStrategies();
+		
+		return gen.averageFitness();
+	}
+	
 	//Static Helper Methods ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
 	 * Takes an index (int) and turns it into a binary bitstring

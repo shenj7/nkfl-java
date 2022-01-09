@@ -3,49 +3,151 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ExperimentRunner {
+	static boolean enableReliabilityTest = false;
+	static int reliabilitySampleSize = 0;
+	static final String CSVOutputParamatersHeader = "EXPERIMENT_PARAMS";
+	static final String CSVOutputFitnessAtStepsHeader = "FITNESS_AT_STEPS";
+	static final String CSVOutputStuckAtLocalOptimaHeader = "STUCK_AT_LOCAL_OPTIMA";
+	static final String CSVOutputStepFrequencyHeader = ":STEP_FREQUENCIES_OF";//put step number at beginning
+	static final String CSVOutputConsecutiveRWsHeader = "CONSECUTIVE RWS";
 	
 	
 	public static void main(String[] args) {
 		//Experiment Variables
 		int numGenerations = 100;
 		int popsPerGeneration = 100;
-		int childrenPercentage = 50;
+		int childrenPercentage = 50; //always set to 100 for ranked
 		double mutationPercentage = 2;
 		int strategyLength = 15;
-		int simulations = 1;
-		int n = 20;
+		int simulations = 100;
+		int numDifferentStarts = 10;
+		int numRunsFromEachStart = 1;
+		int n = 15;
 		int k = 6;
 		int incrementCSVoutput = 10;
-		boolean hillClimbSteepest = true;
-		long seed = SeededRandom.rnd.nextLong();
+		boolean hillClimbSteepest = false;
+		boolean acrossKs = false;
+		String selectionType = "truncation"; //Options are truncation, ranked_linear and ranked_exponential
+		long seed = 462; //Arbitrary Choice //SeededRandom.rnd.nextInt();
+		String experimentName = "Experiment_" + seed + "_" + selectionType;
 		SeededRandom.rnd.setSeed(seed);
+		double reportPercentage = 10; //Reports the top X% of each generation as 'data'
+		boolean enableReliabilityTest = true;
+		int reliabilitySampleSize = 1;
+		boolean useDependentStrategySteps = false; 
+		boolean useOnlyDependentStrategySteps = false;
 		
-		ArrayList<EvolutionSimulation> sims = new ArrayList<EvolutionSimulation>();
-		for(int sample = 0; sample < simulations; sample++)
+		if(selectionType.contains("ranked"))
 		{
-			//Run a EvoSimulation
-			FitnessLandscape landscape = new FitnessLandscape(n, k); //Make a landscape
+			childrenPercentage = 100;
+		}
+		
+		LearningStrategy.useDependentStrategySteps = useDependentStrategySteps;
+		LearningStrategy.useOnlyDependentStrategySteps = useOnlyDependentStrategySteps;
+		ExperimentRunner.enableReliabilityTest = enableReliabilityTest;
+		ExperimentRunner.reliabilitySampleSize = reliabilitySampleSize;
+		numGenerations++;//account for gen 0
+		ArrayList<EvolutionSimulation> sims = new ArrayList<EvolutionSimulation>();
+		
+		if(!acrossKs)
+		{
+			for(int sample = 0; sample < simulations; sample++)
+			{
+				//Run a EvoSimulation
+				FitnessLandscape landscape = new FitnessLandscape(n, k); //Make a landscape
+				
+				for(int start = 0; start < numDifferentStarts; start++)
+				{
+					int[] startingLocation = NDArrayManager.array1dRandInt(n, 2);
+					
+					for(int runNum = 0; runNum < numRunsFromEachStart; runNum++)
+					{
+						//Make the simulation (from constructor EvolutionSimulation(FitnessLandscape landscape, int popsPerGeneration, int numGenerations, double mutationPercentage, int strategyLength, double percentNewPerGeneration)
+						String simNum = sample + "." + start + "." + runNum;
+						EvolutionSimulation sim = new EvolutionSimulation(landscape, popsPerGeneration, numGenerations, mutationPercentage, strategyLength, childrenPercentage, hillClimbSteepest, startingLocation, selectionType);
+						sim.setStringNum(simNum);
+						//Run the simulation
+						sim.runSimulation();
+						
+						//Get the final generation and print its average fitness
+						StrategyGeneration res = sim.generations.get(sim.generations.size() -1);
+						System.out.println("Final average fitness for simulation "+ simNum + ": " + res.averageFitness());
+						
+						//Put the simulation in our sim list
+						sims.add(sim);
+					}
+				}
+			}
+		}
+		else
+		{
+			System.out.println("Running Across Ks");
+			for(int thisk = 0; thisk < n; thisk++)
+			{
+				for(int sample = 0; sample < simulations; sample++)
+				{
+					FitnessLandscape landscape = new FitnessLandscape(n, thisk); //Make a landscape
+					for(int start = 0; start < numDifferentStarts; start++)
+					{
+						int[] startingLocation = NDArrayManager.array1dRandInt(n, 2);
+						
+						for(int runNum = 0; runNum < numRunsFromEachStart; runNum++)
+						{
+							//Make the simulation (from constructor EvolutionSimulation(FitnessLandscape landscape, int popsPerGeneration, int numGenerations, double mutationPercentage, int strategyLength, double percentNewPerGeneration)
+							String simNum = (sample + thisk*simulations) + "." + start + "." + runNum;
+							EvolutionSimulation sim = new EvolutionSimulation(landscape, popsPerGeneration, numGenerations, mutationPercentage, strategyLength, childrenPercentage, hillClimbSteepest, startingLocation, "truncation");
+							sim.setStringNum(simNum);
+							//Run the simulation
+							sim.runSimulation();
+							
+							//Get the final generation and print its average fitness
+							StrategyGeneration res = sim.generations.get(sim.generations.size() -1);
+							System.out.println("Final average fitness for simulation "+ simNum + ": " + res.averageFitness());
+							
+							//Put the simulation in our sim list
+							sims.add(sim);
+						}
+					}
+				}	
+			}
 			
-			//Make the simulation (from constructor EvolutionSimulation(FitnessLandscape landscape, int popsPerGeneration, int numGenerations, double mutationPercentage, int strategyLength, double percentNewPerGeneration)
-			EvolutionSimulation sim = new EvolutionSimulation(landscape, popsPerGeneration, numGenerations, mutationPercentage, strategyLength, childrenPercentage, hillClimbSteepest);
-			
-			//Run the simulation
-			sim.runSimulation();
-			
-			//Get the final generation and print its average fitness
-			StrategyGeneration res = sim.generations.get(sim.generations.size() -1);
-			System.out.println("Final average fitness for simulation "+sample+": " + res.averageFitness());
-			
-			//Put the simulation in our sim list
-			sims.add(sim);
+			for(int thisk = 0; thisk < n; thisk++)
+			{
+				for(int sample = 0; sample < simulations; sample++)
+				{
+					FitnessLandscape landscape = new FitnessLandscape(n, thisk); //Make a landscape
+					for(int start = 0; start < numDifferentStarts; start++)
+					{
+						int[] startingLocation = NDArrayManager.array1dRandInt(n, 2);
+						
+						for(int runNum = 0; runNum < numRunsFromEachStart; runNum++)
+						{
+							//Make the simulation (from constructor EvolutionSimulation(FitnessLandscape landscape, int popsPerGeneration, int numGenerations, double mutationPercentage, int strategyLength, double percentNewPerGeneration)
+							String simNum = (sample+ thisk*simulations + n*simulations) + "." + start + "." + runNum;
+							EvolutionSimulation sim = new EvolutionSimulation(landscape, popsPerGeneration, numGenerations, mutationPercentage, strategyLength, 100, hillClimbSteepest, startingLocation, "ranked_exponential");
+							sim.setStringNum(simNum);
+							//Run the simulation
+							sim.runSimulation();
+							
+							//Get the final generation and print its average fitness
+							StrategyGeneration res = sim.generations.get(sim.generations.size() -1);
+							System.out.println("Final average fitness for simulation "+ simNum + ": " + res.averageFitness());
+							
+							//Put the simulation in our sim list
+							sims.add(sim);
+						}
+					}
+				}
+			}
 		}
 		
 		//CSV export setup
 		PrintWriter csvWriter;
-		File csvFile = new File("src/sim_data.csv");
+		File csvFile = new File("data/" + experimentName + ".csv");
 		try {
 			csvFile.createNewFile();
 		} catch (IOException e) {
@@ -55,63 +157,21 @@ public class ExperimentRunner {
 			csvWriter = new PrintWriter(csvFile);
 
 			// first row (output simulation params to the csv)
-			csvWriter.printf("generations:%d,popsPerGen:%d,childrenPercentage:%d,mutationRate:%f,strategyLength:%d,SimulationsRun:%d,N:%d K:%d,HillClimbSteepest:%b,Seed:%d\n",numGenerations,popsPerGeneration,childrenPercentage,mutationPercentage,strategyLength,simulations,n,k,hillClimbSteepest,seed);
+			csvWriter.printf(CSVOutputParamatersHeader + ",%d,%d,%d,%d,%d,%d,%f,%d,%d,%b,%d,%f\n",simulations,(int)Math.ceil((double)numGenerations/(double)incrementCSVoutput),strategyLength,numGenerations,popsPerGeneration,childrenPercentage,mutationPercentage,n,k,hillClimbSteepest,seed,reportPercentage);
 			
-			
-			//Writes average of multiple simulations (currently unused)--------------------------------------------------------------------------------
-			// second row (column headers)
-//			csvWriter.print("gen_num,avg_fit,");
-//			for(int step = 0; step < strategyLength; step++)
-//			{
-//				csvWriter.print("step " + step + ",");
-//			}
-//			csvWriter.print("\n");
-			
-			// each row is a step, output the data from the average of the simulations
-//			for (int gen = 0; gen < sims.get(0).generations.size(); gen+=incrementCSVoutput) {
-//
-//				//Calculate and output the average fitness from all simulations
-//				double fitAvg = 0;
-//				for(EvolutionSimulation sim : sims)
-//				{
-//					fitAvg += sim.generations.get(gen).averageFitness();
-//				}
-//				fitAvg /= sims.size();
-//				csvWriter.printf("%d,%f,", gen, fitAvg);
-//				
-//
-//				for(int step = 0; step < 14; step++)
-//				{
-//					double percentAtIndexAvg = 0;
-//					for(EvolutionSimulation sim : sims)
-//					{
-//						percentAtIndexAvg += sim.generations.get(gen).getPercentWithStepAtIndex(1, step);
-//					}
-//					percentAtIndexAvg /= sims.size();
-//					
-//					csvWriter.printf("%f,", percentAtIndexAvg);
-//				}
-//				double percentAtIndexAvg = 0;
-//				for(EvolutionSimulation sim : sims)
-//				{
-//					percentAtIndexAvg += sim.generations.get(gen).getPercentWithStepAtIndex(1, 14);
-//				}
-//				percentAtIndexAvg /= sims.size();
-//				csvWriter.printf("%f\n", percentAtIndexAvg);
-//			}
-//			csvWriter.print("\n\n\n\n");
-//			--------------------------------------------------------------------------------------------------------------------------------------------
-			
+					
 			for(int i = 0; i < sims.size(); i++)
 			{
-				csvWriter.printf("Experiment Number: %d\n", i);
-				ExperimentRunner.writeExperimentToCSV(csvWriter, sims.get(i), incrementCSVoutput);
-				ExperimentRunner.writeExpermentPureHCComparison(csvWriter, sims.get(i), hillClimbSteepest);
+				EvolutionSimulation simulation = sims.get(i);
+				csvWriter.printf("Experiment Number: ," + simulation.simNum + "," + i + "\n");
+				ExperimentRunner.writeExperimentToCSV(csvWriter, simulation, incrementCSVoutput, reportPercentage);
+				ExperimentRunner.writeExpermentPureHCComparison(csvWriter, simulation, hillClimbSteepest);
+				System.out.println("Sucessfully wrote experiment " + i);
 			}
 
 			//
 			System.out.println();
-			System.out.println("Successfully written to sim_data.csv");
+			System.out.println("Successfully written to " + experimentName + ".csv");
 			System.out.println();
 
 			// close writer
@@ -125,44 +185,93 @@ public class ExperimentRunner {
 //		System.out.println("");
 	}
 	
-	public static void writeExperimentToCSV(PrintWriter csvWriter, EvolutionSimulation sim, int incrementCSVoutput) {
+	public static void writeExperimentToCSV(PrintWriter csvWriter, EvolutionSimulation sim, int incrementCSVoutput, double reportPercentage) {
 		
-		ArrayList<StrategyGeneration> generations = sim.generations;
+		ArrayList<StrategyGeneration> generations = new ArrayList<StrategyGeneration>();//sim.generations.getGenerationOfTopPercent(reportPercentage);
+		for(StrategyGeneration gen : sim.generations)
+		{
+			generations.add(gen.getGenerationOfTopPercent(reportPercentage));
+		}
 		// each row is a step
 		for (int gen = 0; gen < generations.size(); gen+=incrementCSVoutput) {
 
-			csvWriter.printf("%d,%f,", gen, generations.get(gen).averageFitness());
-			for(int step = 0; step < 14; step++)
+			if(enableReliabilityTest)
 			{
-				csvWriter.printf("%f,", generations.get(gen).getPercentWithStepAtIndex(1, step));
+				csvWriter.printf("%d,%f,%f,%f\n", gen, generations.get(gen).averageFitness(),generations.get(gen).averageFitnessRELIABILITY(reliabilitySampleSize),sim.generations.get(gen).averageFitness());
 			}
-			csvWriter.printf("%f\n", generations.get(gen).getPercentWithStepAtIndex(1, 14));
+			else//normal case
+			{
+				csvWriter.printf("%d,%f,%f\n", gen, generations.get(gen).averageFitness(),sim.generations.get(gen).averageFitness());
+			}
+			if(LearningStrategy.useDependentStrategySteps)
+			{
+				for(int i=0; i<4; i++)
+				{
+					ExperimentRunner.writeStepFrequenciesRow(csvWriter, generations.get(gen), sim.strategyLength, i);
+				}
+			}
+			else
+			{
+				for(int i=0; i<2; i++)
+				{
+					ExperimentRunner.writeStepFrequenciesRow(csvWriter, generations.get(gen), sim.strategyLength, i);
+				}
+			}
+			
+			
+//			for(int step = 0; step < sim.strategyLength - 1; step++)
+//			{
+//				csvWriter.printf("%f,", generations.get(gen).getPercentWithStepAtIndex(1, step));
+//			}
+//			csvWriter.printf("%f\n", generations.get(gen).getPercentWithStepAtIndex(1, sim.strategyLength - 1));
+			csvWriter.printf(CSVOutputFitnessAtStepsHeader + ",");
+			for(int step = 0; step < sim.strategyLength - 1; step++)
+			{
+				csvWriter.printf("%f,", generations.get(gen).averageFitnessAtStep(step));
+			}
+			csvWriter.printf("%f\n", generations.get(gen).averageFitnessAtStep(sim.strategyLength - 1));
+			csvWriter.printf(CSVOutputStuckAtLocalOptimaHeader + ",");
+			for(int step = 0; step < sim.strategyLength - 1; step++)
+			{
+				csvWriter.printf("%f,", generations.get(gen).getPercentStuckAtLocalOptima(step));
+			}
+			csvWriter.printf("%f\n", generations.get(gen).getPercentStuckAtLocalOptima(sim.strategyLength - 1));
+			csvWriter.printf(CSVOutputConsecutiveRWsHeader + ",");
+			csvWriter.printf("%f,", generations.get(gen).getAverageNumberConsecutiveRWs());
+			int[] rwList = generations.get(gen).numConsecutiveRWsAcrossGeneration();
+			for(int i = 0; i < rwList.length - 1; i++)
+			{
+				csvWriter.printf("%d,", rwList[i]);
+			}
+			csvWriter.printf("%d\n", rwList[rwList.length - 1]);
 		}
+	}
+	
+	public static void writeStepFrequenciesRow(PrintWriter csvWriter, StrategyGeneration gen, int strategyLength, int stepnum)
+	{
+		csvWriter.print(stepnum + CSVOutputStepFrequencyHeader + ",");
+		for(int step = 0; step < strategyLength-1; step++)
+		{
+			csvWriter.printf("%f,", gen.getPercentWithStepAtIndex(stepnum, step));
+		}
+		csvWriter.printf("%f\n", gen.getPercentWithStepAtIndex(stepnum, strategyLength-1));
 	}
 	
 	public static void writeExpermentPureHCComparison(PrintWriter csvWriter, EvolutionSimulation sim, boolean hillClimbSteepest) {
 		csvWriter.printf("Comparison: Pure SHC,");
 		
-		int[] constructorArray = new int[15];
-		ArrayList<int[]> strategies = new ArrayList<int[]>();
-		for(int j = 0; j < 15; j++)
+		int[] constructorArray = new int[sim.strategyLength];
+		
+		for(int j = 0; j < sim.strategyLength; j++)
 		{
 			constructorArray[j] = 1;
 		}
-		for(int j = 0; j < 10000; j++)
-		{
-			strategies.add(NDArrayManager.copyArray1d(constructorArray));
-		}
-		ArrayList<LearningStrategy> strats = new ArrayList<LearningStrategy>();
-		for(int x = 0; x < 10000; x++)
-		{
-			strats.add(new LearningStrategy(sim.generations.get(0).landscape, strategies.get(x), hillClimbSteepest));
-		}
-		StrategyGeneration gen = new StrategyGeneration(strats, hillClimbSteepest);
-		gen.runAllStrategies();
-		csvWriter.printf("%f", gen.averageFitness());
 		
-		csvWriter.printf("\n\n");
+		double averageFitness = sim.landscape.testStrategyOnLandscape(constructorArray, sim.startingLocation, 1000, hillClimbSteepest);
+		
+		csvWriter.printf("%f", averageFitness);
+		
+		csvWriter.printf("\n");
 	}
 	
 }
