@@ -3,3 +3,7 @@
 /ExperimentRunner.class
 /NDArrayManager.class
 /StrategyGenerationFactory.class
+/Step.class
+/Walk.class
+/WalkStep.class
+/InformationGatherStep.class
