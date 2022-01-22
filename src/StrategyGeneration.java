@@ -61,6 +61,7 @@ public class StrategyGeneration {
 
 	public LearningStrategy getBestStrategyOfGeneration()
 	{
+		this.sortStrategies();
 		return strategies.get(strategies.size() - 1);
 	}
 	

@@ -11,22 +11,24 @@ public class ExperimentRunner {
 	
 	public static void main(String[] args) {
 		//Strategy Parameters
-		int strategyLength = 15;
+		int strategyLength = 50;
+		int sensitivity = 1;
+		int maxSensitivity = 14; //Set this equal to sensitivity for a single sensitiviry run
 
 		//Landscape Parameters
 		int n = 15;
 		int k = 6;
 		
 		//Evolution Parameters
-		String selectionType = "mutation"; //Options are truncation, ranked_linear and ranked_exponential
+		String selectionType = "mutation"; 
 		int numGenerations = 100;
 		int popsPerGeneration = 100;
 		int childrenPercentage = 50; //always set to 100 for ranked
 		double mutationPercentage = 2;
 		
 		//Seed parameters
-		long seed = 462; //Set Seed
-		//long seed = SeededRandom.rnd.nextInt(); //Random seed
+		long seed = 7; //Set Seed
+//		long seed = SeededRandom.rnd.nextInt(); //Random seed
 		SeededRandom.rnd.setSeed(seed);
 
 		//Data Reporting Parameters
@@ -39,19 +41,19 @@ public class ExperimentRunner {
 		//Num Simulation Parameters
 		int simulations = 1;
 		int starts = 1;
-		int runs = 1;
+		int runs = 10;
 		
 		if(selectionType.contains("ranked"))
 		{
 			childrenPercentage = 100;
 		}
 		
-		//Setup CSV writer
-		try {
-            csvFile.createNewFile();
-        } catch (IOException e) {
-            System.err.println("CSV file not created");
-        }
+//		//Setup CSV writer
+//		try {
+//            csvFile.createNewFile();
+//        } catch (IOException e) {
+//            System.err.println("CSV file not created");
+//        }
 		
 		try {
 			csvWriter = new PrintWriter(csvFile + ".csv");
@@ -61,37 +63,79 @@ public class ExperimentRunner {
 			return;
 		}
 		
-		//Setup comparison strategies
-		Map<String, LearningStrategy> comparisonStrategies = new HashMap<String, LearningStrategy>();
+		HashMap<String, ArrayList<Step>> strats = new HashMap<String, ArrayList<Step>>();
+		
+		ArrayList<Step> pureWalk = new ArrayList<Step>();
+		for(int i = 0; i < strategyLength; i++)
+		{
+			pureWalk.add(new WalkStep());
+		}
+		strats.put("PureWalk", pureWalk);
+		
+		ArrayList<Step> alternateLookWalk = new ArrayList<Step>();
+		for(int i = 0; i < strategyLength/2; i++)
+		{
+			alternateLookWalk.add(new LookStep());
+			alternateLookWalk.add(new WalkStep());
+		}
+		strats.put("AlternateLookWalk", alternateLookWalk);
+		
+		ArrayList<Step> SHC = new ArrayList<Step>();
+		int looksperwalk = (int) Math.ceil((n * 1.0/sensitivity));
+		
+		for(int i = 0; i < strategyLength/(looksperwalk + 1); i++)
+		{
+			for(int j = 0; j < looksperwalk; j++)
+			{
+				SHC.add(new LookStep());
+			}
+			SHC.add(new WalkStep());
+		}
+		strats.put("Steep Hill Climb", SHC);
+		
 		
 		//Run Simulation
-		for(int simulation = 0; simulation < simulations; simulation++)
+		for(int sense = sensitivity; sense <= maxSensitivity; sense++)
 		{
-			FitnessLandscape landscape = new FitnessLandscape(n, k, SeededRandom.rnd.nextInt());
-			for(int start = 0; start < starts; start++)
+			LookStep.DEFAULT_NUM_CHECKS = sense;
+			for(int simulation = 0; simulation < simulations; simulation++)
 			{
-				int[] startingLocation = NDArrayManager.array1dRandInt(strategyLength, 2);
-				for(int run = 0; run < runs; run++)
+				FitnessLandscape landscape = new FitnessLandscape(n, k, SeededRandom.rnd.nextInt());
+				for(int start = 0; start < starts; start++)
 				{
-					String simNum = "" + simulation + "." + start + "." + run;
+					int[] startingLocation = NDArrayManager.array1dRandInt(n, 2);
+					//Setup comparison strategies
+					Map<String, LearningStrategy> comparisonStrategies = new HashMap<String, LearningStrategy>();
 					
-					EvolutionSimulation sim = new EvolutionSimulation(
-							landscape,
-							popsPerGeneration,
-							numGenerations,
-							mutationPercentage,
-							strategyLength,
-							childrenPercentage,
-							startingLocation,
-							selectionType
-							);
-					sim.setStringNum(simNum);
+					for(String name : strats.keySet())
+					{
+						LearningStrategy comparison = new LearningStrategy(landscape, strats.get(name), startingLocation);
+						comparisonStrategies.put(name, comparison);
+					}
 					
-					sim.runSimulation();
-					System.out.println(simNum + " complete");
 					
-					sim.writeExperimentToCSV(csvWriter, comparisonStrategies, incrementCSVoutput);
-					
+					for(int run = 0; run < runs; run++)
+					{
+						String simNum = "" + simulation + "." + start + "." + run;
+						
+						EvolutionSimulation sim = new EvolutionSimulation(
+								landscape,
+								popsPerGeneration,
+								numGenerations,
+								mutationPercentage,
+								strategyLength,
+								childrenPercentage,
+								startingLocation,
+								selectionType
+								);
+						sim.setStringNum(simNum);
+						
+						sim.runSimulation();
+						System.out.println(simNum + " complete");
+						
+						sim.writeExperimentToCSV(csvWriter, comparisonStrategies, incrementCSVoutput);
+						
+					}
 				}
 			}
 		}

@@ -6,7 +6,7 @@ import java.util.ArrayList;
  * @author Jackson Shen, Jacob Ashworth
  */
 public class LookStep extends Step {
-	public static final int DEFAULT_NUM_CHECKS = 1;
+	public static int DEFAULT_NUM_CHECKS = 1;
 	
 	public int numChecks; // change this to change the number of info-gathering steps
 	

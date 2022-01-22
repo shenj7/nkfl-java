@@ -44,7 +44,12 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	 */
 	public LearningStrategy(FitnessLandscape landscape, ArrayList<Step> strategy, int[] genotype) {
 		this.landscape = landscape;
-		this.strategy = strategy;
+		this.strategy = new ArrayList<Step>();
+		
+		for(Step s : strategy)
+		{
+			this.strategy.add(s);
+		}
 
 		initializeArrays(genotype);
 	}

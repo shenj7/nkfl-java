@@ -264,6 +264,21 @@ public class FitnessLandscape {
 		return gen.averageFitness();
 	}
 	
+	public double testStrategyOnLandscape(ArrayList<Step> strategy, int numTests, int[] startingLocation)
+	{
+		ArrayList<LearningStrategy> strategies = new ArrayList<LearningStrategy>();
+
+		for(int x = 0; x < numTests; x++)
+		{
+			strategies.add(new LearningStrategy(this, strategy, startingLocation));
+		}
+		
+		StrategyGeneration gen = new StrategyGeneration(strategies);
+		gen.runAllStrategies();
+		
+		return gen.averageFitness();
+	}
+	
 	//Static Helper Methods ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
 	 * Takes an index (int) and turns it into a binary bitstring

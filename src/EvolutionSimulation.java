@@ -56,7 +56,7 @@ public class EvolutionSimulation {
 	
 	public void runSimulation()
 	{
-		for(int i = generations.size(); i < numGenerations; i++)
+		for(int i = generations.size(); i <= numGenerations; i++) //<= because gen 0 doesn't really count
 		{
 			generations.get(generations.size() - 1).sortStrategies();
 			//Make the next generation
@@ -96,10 +96,10 @@ public class EvolutionSimulation {
 	static final String StrategyRowHeader = "STRATEGY_ROW";
 	static final String FitnessRowHeader = "FITNESS_ROW";
 	static final String ComparisonStrategyHeader = "COMPARISON_STRATEGIES";
-	static final int numTestsForComparison = 1;
+	static final int numTestsForComparison = 1000;
 	public void writeExperimentToCSV(PrintWriter csvWriter, Map<String, LearningStrategy> comparisonStrategies, int csvIncrement)
 	{
-		csvWriter.print(SimulationHeader + "," + simNum + "\n");
+		csvWriter.print(SimulationHeader + "," + simNum + "," + "Sensitivity: " + LookStep.DEFAULT_NUM_CHECKS  + "," + "Landscape seed: " + landscape.landscapeSeed + "," + "Starting Location" + NDArrayManager.array1dAsString(startingLocation) + "\n");
 		for(int gen = 0; gen < generations.size(); gen += csvIncrement)
 		{
 			csvWriter.print(GenerationHeader + "," + gen + "\n");
@@ -121,14 +121,15 @@ public class EvolutionSimulation {
 			}
 			csvWriter.print("\n");
 			
-			csvWriter.print(ComparisonStrategyHeader);
-			for(String name : comparisonStrategies.keySet())
-			{
-				LearningStrategy s = comparisonStrategies.get(name);
-				csvWriter.print("," + name + ":" + landscape.testStrategyOnLandscape(s, numTestsForComparison));
-			}
-			csvWriter.print("\n");
 		}
+		
+		csvWriter.print(ComparisonStrategyHeader);
+		for(String name : comparisonStrategies.keySet())
+		{
+			LearningStrategy s = comparisonStrategies.get(name);
+			csvWriter.print("," + name + ":" + landscape.testStrategyOnLandscape(s, numTestsForComparison));
+		}
+		csvWriter.print("\n");
 	}
 
 

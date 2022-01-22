@@ -203,7 +203,7 @@ public class NDArrayManager {
 		sb.append("[");
 		for (int i : array) {
 			sb.append(i);
-			sb.append(",");
+			sb.append(".");
 		}
 		return sb.toString().substring(0, sb.length() - 1) + "]";
 	}
