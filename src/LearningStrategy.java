@@ -153,6 +153,17 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		return strategy.get(i).getClass().getName(); //We should just pass the name of the step, not the step itself
 	}
 	
+	public void mutate(double mutationPercentage) {
+		for(int i = 0; i < strategy.size(); i++)
+		{
+			double roll = SeededRandom.rnd.nextDouble() * 100;
+			if(roll < mutationPercentage)
+			{
+				this.mutateStep(i);
+			}
+		}
+	}
+	
 	/**
 	 * Randomly mutates step i of the strategy array
 	 * @param i

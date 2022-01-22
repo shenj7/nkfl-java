@@ -13,46 +13,34 @@ class Tests_StrategyGeneration {
 	@Test
 	void testBasicGenerationDeclaration() {
 		FitnessLandscape landscape = new FitnessLandscape(15, 3);
-		StrategyGeneration gen = new StrategyGeneration(landscape, 1000, 10, true);
+		int[] startingLocation = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		StrategyGeneration gen = new StrategyGeneration(landscape, 1000, 10, startingLocation);
 		Assertions.assertEquals(1000, gen.strategies.size());
 		Assertions.assertEquals(gen.landscape, landscape);
-		Assertions.assertEquals(10, gen.strategies.get(0).strategyArray.length);
-	}
-	
-	@Test
-	void testDeterminedGenerationDeclaration() {
-		FitnessLandscape landscape = new FitnessLandscape(15, 3);
-		ArrayList<LearningStrategy> strats = new ArrayList<LearningStrategy>();
-		for(int i = 0; i < 1000; i++)
-		{
-			strats.add(new LearningStrategy(landscape, 10, true));
-		}
-		StrategyGeneration gen = new StrategyGeneration(strats, true);
-		Assertions.assertEquals(1000, gen.strategies.size());
-		Assertions.assertEquals(gen.landscape, landscape);
-		Assertions.assertEquals(10, gen.strategies.get(0).strategyArray.length);
+		Assertions.assertEquals(10, gen.strategies.get(0).strategy.size());
 	}
 	
 	@Test
 	void testSorting() {
 		FitnessLandscape landscape = new FitnessLandscape(20, 3);
+		int[] startingLocation = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		ArrayList<LearningStrategy> strategyList = new ArrayList<LearningStrategy>();
 		for(int i = 0; i < 10; i++)
 		{
-			strategyList.add(new LearningStrategy(landscape, 10, true));
+			strategyList.add(new LearningStrategy(landscape, 10, startingLocation));
 		}
 		
-		StrategyGeneration gen = new StrategyGeneration(strategyList, true);
+		StrategyGeneration gen = new StrategyGeneration(strategyList);
 		
 		gen.runAllStrategies();
 		gen.sortStrategies();
 		
 		System.out.print("Sorted random fitnesses: ");
-		double prevStrat = 1;
+		double prevStrat = 0;
 		for(int i = 0; i < 10; i++)
 		{
-			Assert.assertTrue(gen.getStrategyAtIndex(i).currentFitness <= prevStrat);
-			prevStrat = strategyList.get(i).currentFitness;
+			Assert.assertTrue(gen.getStrategyAtIndex(i).phenotypeFitness >= prevStrat);
+			prevStrat = strategyList.get(i).phenotypeFitness;
 			System.out.print(prevStrat + " ");
 		}
 		System.out.println("");
