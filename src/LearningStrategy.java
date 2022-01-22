@@ -145,6 +145,20 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		return new LearningStrategy(landscape, childStrategy, NDArrayManager.copyArray1d(genotype));
 	}
 	
+	public LearningStrategy getMutatedChild(double mutationRate) {
+		ArrayList<Step> childStrategy = new ArrayList<Step>();
+		
+		//Since our steps don't depend on the specific genotype(just the landscape), this is fine
+		for(Step step : strategy)
+		{
+			childStrategy.add(step);
+		}
+		
+		LearningStrategy child = new LearningStrategy(landscape, childStrategy, NDArrayManager.copyArray1d(genotype));
+		child.mutate(mutationRate);
+		return child;
+	}
+	
 	public int getStrategyLength() {
 		return strategy.size();
 	}

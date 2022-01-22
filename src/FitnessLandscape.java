@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Java Implementation of https://github.com/jasonayoder/EvoDevoNKFL
@@ -15,6 +16,9 @@ public class FitnessLandscape {
 	public double[] fitTable; // This is set in generateFitnessTable
 	int n; // This is set in constructor
 	int k; // This is set in constructor
+	
+	int landscapeSeed;
+	Random landscapeRnd; //This exists so our entire landscape has its own seed
 
 	/**
 	 * Initializes a NK fitness landscape with the given n and k values
@@ -23,6 +27,23 @@ public class FitnessLandscape {
 	 * @param k number of interactions per bit
 	 */
 	public FitnessLandscape(int n, int k) {
+		this.landscapeSeed = SeededRandom.rnd.nextInt();
+		this.landscapeRnd = new Random(landscapeSeed);
+		
+		this.n = n;
+		this.k = k;
+		
+		double[][] interactionTable = generateRandomInteractionTable(n, k);
+		generateFitnessTable(interactionTable); //this has no return value because it stores its data in the landscape globals
+		
+		visitedTable = new int[(int) Math.pow(2, n)];
+		init_visited();
+	}
+	
+	public FitnessLandscape(int n, int k, int seed) {
+		this.landscapeSeed = seed;
+		this.landscapeRnd = new Random(landscapeSeed);
+		
 		this.n = n;
 		this.k = k;
 		
@@ -46,7 +67,7 @@ public class FitnessLandscape {
 
 		for (int x = 0; x < n; x++) {
 			for (int y = 0; y < (int) Math.pow(2, (k + 1)); y++) {
-				interactions[x][y] = SeededRandom.rnd.nextDouble();
+				interactions[x][y] = landscapeRnd.nextDouble();
 			}
 		}
 
@@ -178,6 +199,10 @@ public class FitnessLandscape {
 		}
 	}
 	
+	public int getLandscapeSeed() {
+		return landscapeSeed;
+	}
+	
 	//Not used by the landscape itself, but called by learning strategies to find their greatest neighbor
 	//Copies a lot of arrays to avoid altering location data
 	public int[] greatestNeighbor(int[] location)
@@ -224,22 +249,16 @@ public class FitnessLandscape {
 		return true;
 	}
 	
-	public double testStrategyOnLandscape(int[] strategy, int[] startingLocation, int numTests, boolean hillClimbSteepest)
+	public double testStrategyOnLandscape(LearningStrategy strategy, int numTests)
 	{
-		ArrayList<int[]> strategies = new ArrayList<int[]>();
-		
-		for(int j = 0; j < 10000; j++)
+		ArrayList<LearningStrategy> strategies = new ArrayList<LearningStrategy>();
+
+		for(int x = 0; x < numTests; x++)
 		{
-			strategies.add(NDArrayManager.copyArray1d(strategy));
-		}
-		ArrayList<LearningStrategy> strats = new ArrayList<LearningStrategy>();
-		for(int x = 0; x < 10000; x++)
-		{
-			strats.add(new LearningStrategy(this, strategies.get(x), hillClimbSteepest));
+			strategies.add(strategy.getDirectChild());
 		}
 		
-		StrategyGeneration gen = new StrategyGeneration(strats, hillClimbSteepest);
-		gen.setOriginalGenotypes(startingLocation);
+		StrategyGeneration gen = new StrategyGeneration(strategies);
 		gen.runAllStrategies();
 		
 		return gen.averageFitness();

@@ -56,6 +56,7 @@ public class StrategyGeneration {
 		}
 		landscape = strategies.get(0).landscape;
 		strategyLength = strategies.get(0).strategy.size();
+		startingLocation = strategies.get(0).genotype;
 	}
 
 	public LearningStrategy getBestStrategyOfGeneration()
@@ -99,6 +100,12 @@ public class StrategyGeneration {
 	public LearningStrategy getDirectChild(int index)
 	{
 		return strategies.get(index).getDirectChild();
+	}
+	
+	public LearningStrategy getRandomStrategy()
+	{
+		int index = SeededRandom.rnd.nextInt(strategies.size());
+		return strategies.get(index);
 	}
 	
 	public LearningStrategy getStrategyAtIndex(int index)
