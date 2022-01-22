@@ -207,5 +207,25 @@ public class NDArrayManager {
 		}
 		return sb.toString().substring(0, sb.length() - 1) + "]";
 	}
+	
+	public static String array1dDoubleAsString(double[] array) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (double i : array) {
+			sb.append(i);
+			sb.append(",");
+		}
+		return sb.toString().substring(0, sb.length() - 1) + "]";
+	}
+	
+	public static boolean arrayContainsElement(int[] array, int element) {
+		for(int x : array) {
+			if(element == x)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 
 } // end class
