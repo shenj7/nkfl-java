@@ -164,7 +164,16 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	}
 	
 	public String getStepAtIndex(int i) {
-		return strategy.get(i).getClass().getName(); //We should just pass the name of the step, not the step itself
+		return strategy.get(i).getStepName(); //We should just pass the name of the step, not the step itself
+	}
+	
+	public ArrayList<String> getStrategyStringArray() {
+		ArrayList<String> strArray = new ArrayList<String>();
+		for(Step s : strategy)
+		{
+			strArray.add(s.getStepName());
+		}
+		return strArray;
 	}
 	
 	public void mutate(double mutationPercentage) {
@@ -201,6 +210,10 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	
 	public double getFitnessAtStep(int step) {
 		return fitnessArray[step];
+	}
+	
+	public double[] getFitnessArray() {
+		return fitnessArray;
 	}
 
 	/**

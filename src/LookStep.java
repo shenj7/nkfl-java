@@ -34,5 +34,9 @@ public class LookStep extends Step {
 		}
 		return phenotype;
 	}
+	
+	public String getStepName() {
+		return "Look";
+	}
 
 }

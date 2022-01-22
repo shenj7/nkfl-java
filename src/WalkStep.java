@@ -44,5 +44,9 @@ public class WalkStep extends Step {
 			return bestPhenotype;
 		}
 	}
+	
+	public String getStepName() {
+		return "Walk";
+	}
 
 }

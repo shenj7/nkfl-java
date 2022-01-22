@@ -3,6 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class EvolutionSimulation {
 
@@ -58,7 +59,6 @@ public class EvolutionSimulation {
 		for(int i = generations.size(); i < numGenerations; i++)
 		{
 			generations.get(generations.size() - 1).sortStrategies();
-//			System.out.println("Running gen " + i + " of " + numGenerations + ", average fitness: " + generations.get(generations.size() - 1).averageFitness() + "  " + exgen);
 			//Make the next generation
 			StrategyGeneration nextGen;
 			if(evolutionType.toLowerCase().equals("mutation"))
@@ -85,9 +85,51 @@ public class EvolutionSimulation {
 			generations.add(nextGen);
 			//Run the next generation
 			nextGen.runAllStrategies();
-			System.out.println(nextGen.averageFitness());
+//			System.out.println(nextGen.averageFitness());
 		}
 //		writeExperimentToCSV();
 	}
+	
+	//CSV Output Headers
+	static final String SimulationHeader = "SIMULATION";
+	static final String GenerationHeader = "GENERATION";
+	static final String StrategyRowHeader = "STRATEGY_ROW";
+	static final String FitnessRowHeader = "FITNESS_ROW";
+	static final String ComparisonStrategyHeader = "COMPARISON_STRATEGIES";
+	static final int numTestsForComparison = 1;
+	public void writeExperimentToCSV(PrintWriter csvWriter, Map<String, LearningStrategy> comparisonStrategies, int csvIncrement)
+	{
+		csvWriter.print(SimulationHeader + "," + simNum + "\n");
+		for(int gen = 0; gen < generations.size(); gen += csvIncrement)
+		{
+			csvWriter.print(GenerationHeader + "," + gen + "\n");
+			
+			//Write strategy to CSV
+			csvWriter.print(StrategyRowHeader);
+			LearningStrategy bestOfGen = generations.get(gen).getBestStrategyOfGeneration();
+			for(String step : bestOfGen.getStrategyStringArray())
+			{
+				csvWriter.print("," + step);
+			}
+			csvWriter.print("\n");
+			
+			//Write fitnesses to CSV
+			csvWriter.print(FitnessRowHeader);
+			for(double d: bestOfGen.getFitnessArray())
+			{
+				csvWriter.print("," + d);
+			}
+			csvWriter.print("\n");
+			
+			csvWriter.print(ComparisonStrategyHeader);
+			for(String name : comparisonStrategies.keySet())
+			{
+				LearningStrategy s = comparisonStrategies.get(name);
+				csvWriter.print("," + name + ":" + landscape.testStrategyOnLandscape(s, numTestsForComparison));
+			}
+			csvWriter.print("\n");
+		}
+	}
+
 
 }
