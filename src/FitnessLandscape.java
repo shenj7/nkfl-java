@@ -264,7 +264,7 @@ public class FitnessLandscape {
 		return gen.averageFitness();
 	}
 	
-	public double testStrategyOnLandscape(ArrayList<Step> strategy, int numTests, int[] startingLocation)
+	public StrategyGeneration testStrategyOnLandscape(ArrayList<Step> strategy, int numTests, int[] startingLocation)
 	{
 		ArrayList<LearningStrategy> strategies = new ArrayList<LearningStrategy>();
 
@@ -276,7 +276,7 @@ public class FitnessLandscape {
 		StrategyGeneration gen = new StrategyGeneration(strategies);
 		gen.runAllStrategies();
 		
-		return gen.averageFitness();
+		return gen;
 	}
 	
 	//Static Helper Methods ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

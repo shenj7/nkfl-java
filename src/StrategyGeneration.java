@@ -72,6 +72,13 @@ public class StrategyGeneration {
 		}
 	}
 	
+	public void runAllStrategies(int sampleSize) {
+		for(LearningStrategy strategy : strategies)
+		{
+			strategy.executeStrategy(sampleSize);
+		}
+	}
+	
 	public double averageFitness() {
 		double sumOfFitnesses = 0;
 		for(LearningStrategy strategy : strategies)
@@ -120,6 +127,22 @@ public class StrategyGeneration {
 		{
 			strat.mutate(mutationPercentage);
 		}
+	}
+	
+	public double[] getAverageFitnessAtSteps()
+	{
+		double[] avg = new double[strategyLength];
+		for(int stepNum = 0; stepNum < strategyLength; stepNum++)
+		{
+			double currentAvg = 0;
+			for(LearningStrategy strat : strategies)
+			{
+				currentAvg += strat.getFitnessAtStep(stepNum);
+			}
+			currentAvg /= strategies.size();
+			avg[stepNum] = currentAvg;
+		}
+		return avg;
 	}
 	
 	public void sortStrategies() {

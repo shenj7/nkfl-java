@@ -132,6 +132,47 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 			return 0;
 		}
 	}
+	
+	public double executeStrategy(int sampleSize) 
+	{
+		if(!strategyExecuted)
+		{
+			double[] avgFitnessArray = new double[fitnessArray.length];
+			for(int sample = 0; sample < sampleSize; sample++)
+			{
+				for(int i = 0; i < strategy.size(); i++)
+				{
+					Step current = strategy.get(i);
+					
+					this.phenotype = current.execute(landscape, phenotype, lookedLocations);
+					this.phenotypeFitness = landscape.fitness(phenotype);
+					
+					fitnessArray[i] = this.phenotypeFitness;
+				}
+				
+				for(int i = 0; i < fitnessArray.length; i++)
+				{
+					avgFitnessArray[i] += fitnessArray[i];
+					fitnessArray[i] = 0;
+				}
+				this.phenotype = NDArrayManager.copyArray1d(this.genotype);
+				this.phenotypeFitness = this.genotypeFitness;
+			}
+			
+			for(int i = 0; i < fitnessArray.length; i++)
+			{
+				fitnessArray[i] = avgFitnessArray[i] / sampleSize;
+			}
+			this.phenotypeFitness = fitnessArray[fitnessArray.length - 1];
+			this.strategyExecuted = true;
+			return this.phenotypeFitness;
+		}
+		else
+		{
+			System.out.print("Double-executing strategy not permitted");
+			return 0;
+		}
+	}
 
 	/**
 	 * Returns a child that has the exactly the same strategy as the parent
