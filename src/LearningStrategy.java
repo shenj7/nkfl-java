@@ -23,6 +23,7 @@ import java.util.ArrayList;
  *
  */
 public class LearningStrategy implements Comparable<LearningStrategy>{
+	static int setNumberOfWalks = 0;
 	//Data needed to function
 	ArrayList<Step> strategy;
 	ArrayList<Integer> lookedLocations = new ArrayList<Integer>();
@@ -85,6 +86,39 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		//Set our original values
 		fitnessArray = new double[strategy.size()];
 		fitnessArray[0] = this.genotypeFitness;
+		
+		if(setNumberOfWalks != 0)
+		{
+			enforceNumberOfWalks();
+		}
+	}
+	
+	private void enforceNumberOfWalks() {
+		int walks = getNumberOfWalks();
+		int diff = setNumberOfWalks - walks;
+		
+		while(diff < 0)//too many walks
+		{
+			turnRandomStepToLook();
+			diff++;
+		}
+		while(diff > 0)//too few walks
+		{
+			turnRandomStepToWalk();
+			diff--;
+		}
+	}
+	
+	public int getNumberOfWalks() {
+		int numberOfWalks = 0;
+		for(Step s : strategy)
+		{
+			if(s.getStepName().equals("Walk"))
+			{
+				numberOfWalks++;
+			}
+		}
+		return numberOfWalks;
 	}
 	
 	//Not sure if this is the best implementation
@@ -231,6 +265,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 				this.mutateStep(i);
 			}
 		}
+		enforceNumberOfWalks();
 	}
 	
 	/**
@@ -240,11 +275,11 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	
 	//Pretty sure this is a bad solution, but with classes we don't have another option...
 	public void mutateStep(int i) {
-		if(strategy.get(i).getClass().getName() == "LookStep")
+		if(strategy.get(i).getStepName() == "Look")
 		{
 			strategy.set(i, new WalkStep());
 		}
-		else if(strategy.get(i).getClass().getName() == "WalkStep")
+		else if(strategy.get(i).getStepName() == "Walk")
 		{
 			strategy.set(i, new LookStep());
 		}
@@ -252,6 +287,24 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		{
 			System.err.println("Could not determine step to mutate");
 		}
+	}
+	
+	public void turnRandomStepToLook() {
+		int stepIndex = SeededRandom.rnd.nextInt(strategy.size());
+		while(strategy.get(stepIndex).getStepName() == "Look")//If this is a look step, changing it won't help
+		{
+			stepIndex = SeededRandom.rnd.nextInt(strategy.size());
+		}
+		strategy.set(stepIndex, new LookStep());
+	}
+	
+	public void turnRandomStepToWalk() {
+		int stepIndex = SeededRandom.rnd.nextInt(strategy.size());
+		while(strategy.get(stepIndex).getStepName() == "Walk")//If this is a walk step, changing it won't help
+		{
+			stepIndex = SeededRandom.rnd.nextInt(strategy.size());
+		}
+		strategy.set(stepIndex, new WalkStep());
 	}
 	
 	public double getFitnessAtStep(int step) {

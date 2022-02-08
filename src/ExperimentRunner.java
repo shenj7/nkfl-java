@@ -12,15 +12,19 @@ public class ExperimentRunner {
 	public static void main(String[] args) {
 //		//Strategy Parameters
 		int strategyLength = 50;
-		int sensitivity = 3;
-		int maxSensitivity = 3; //Set this equal to sensitivity for a single sensitiviry run
+		int sensitivity = 1;
+		int maxSensitivity = 1; //Set this equal to sensitivity for a single sensitiviry run
 		int sensitivityInceremet = 1;
+		
+		//Set to 0 if you don't want to control
+		int numberOfWalks = 10;
+		LearningStrategy.setNumberOfWalks = numberOfWalks;
 
 		//Landscape Parameters
 		int n = 15;
 		int k = 0;
-		int maxk = 8; //Set this equal to k for a single k run
-		int kincrement = 2;
+		int maxk = 15; //Set this equal to k for a single k run
+		int kincrement = 1;
 		
 		//Evolution Parameters
 		String selectionType = "mutation"; 
@@ -30,7 +34,7 @@ public class ExperimentRunner {
 		double mutationPercentage = 2;
 		
 		//Seed parameters
-		long seed = 337; //Set Seed
+		long seed = 448; //Set Seed
 //		long seed = SeededRandom.rnd.nextInt(); //Random seed
 		SeededRandom.rnd.setSeed(seed);
 
@@ -42,7 +46,7 @@ public class ExperimentRunner {
 
 		
 		//Num Simulation Parameters
-		int simulations = 100;
+		int simulations = 500;
 		int starts = 1;
 		int runs = 1;
 		int strategyRuns = 25;
@@ -97,6 +101,8 @@ public class ExperimentRunner {
 		}
 		strats.put("Steep Hill Climb", SHC);
 		
+		double numSimsTotal = (((maxk-k)/kincrement)+1) * (((maxSensitivity-sensitivity)/sensitivityInceremet)+1) * simulations * starts * runs;
+		double numSim = 0;
 		
 		//Run Simulation
 		for(int thisk = k; thisk <= maxk; thisk+=kincrement)
@@ -122,6 +128,8 @@ public class ExperimentRunner {
 						
 						for(int run = 0; run < runs; run++)
 						{
+							long startTime = System.currentTimeMillis()/1000;
+							numSim++;
 							String simNum = "" + thisk + "." + sense + "." + simulation + "." + start + "." + run;
 							
 							EvolutionSimulation sim = new EvolutionSimulation(
@@ -138,7 +146,11 @@ public class ExperimentRunner {
 							sim.setStringNum(simNum);
 							
 							sim.runSimulation();
-							System.out.println(simNum + " complete");
+							long endTime = System.currentTimeMillis()/1000;
+							long timeOfLastRun = endTime - startTime;
+							
+							double simsLeft = numSimsTotal-numSim;
+							System.out.println(simNum + " complete, progress = " + 100*numSim/numSimsTotal + "%, estimated time remaning: " + timeOfLastRun*simsLeft/60 + " minutes");
 							
 							sim.writeExperimentToCSV(csvWriter, strats, incrementCSVoutput);
 							
