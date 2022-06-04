@@ -1,5 +1,5 @@
 import csv
-import os
+import os, glob
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -7,12 +7,14 @@ from matplotlib import cm
 # from colorspacious import cspace_converter
 from collections import OrderedDict
 from tkinter.filedialog import askopenfilename
-
+from colour import Color
+ 
 import ExperimentStorer
 import GraphMaker
 import statistics
 
 cmaps=OrderedDict()
+#ask the user to sleect the folder containing the experiments
 filename = askopenfilename()
 
 kValues = []
@@ -149,7 +151,7 @@ kSHC.append(arraySHC)
 kAlternate.append(arrayAlternate)
 kBalance.append(arrayBalance)
 
-print(len(kArrayF[0]))
+print(len(kArrayF[0][0]))
 
 simsPerK = len(kArrayS[0])
 stepsPerSim = len(kArrayS[0][0])
@@ -189,6 +191,8 @@ for i in range(len(kValues)):
     AlternateSorted[kValues[i]] = kAlternate[i]
     BalancedSorted[kValues[i]] = kBalance[i]
 
+print(kValues)
+
 kArrayS = SSorted
 kArrayF = FSorted
 kpurewalk = PureWalkSorted
@@ -196,93 +200,47 @@ kSHC = SHCSorted
 kAlternate = AlternateSorted
 kBalance = BalancedSorted
 
-kLooksBetweenWalk = []
-arrLooksBetweenWalk = []
-looksBetweenWalks = []
+fig, ax = plt.subplots()
+# ax2 = ax.twinx()
+# plt.title("Final Fitnesses of Strategies across K-Values")
 
-fitness = []
-arrFitness = []
-kFitness = []
+#make an array of k colors
 
-numRW = 0
-numtot = 0
-nk = 0
-for k in kArrayS:
-    nsim = 0
-    for sim in k:
-        looksSinceLastWalk = 0
-        stepnum = 0
-        for step in sim:
-            if(step == 'Walk'):
-                numtot = numtot + 1
-                if(looksSinceLastWalk == 0):
-                    numRW = numRW + 1
-                looksBetweenWalks.append(looksSinceLastWalk)
-                looksSinceLastWalk = 0
-                # print(str(nk) + " " + str(nsim) + " " + str(stepnum))
-                fitness.append(kArrayF[nk][nsim][stepnum])
-            else:
-                looksSinceLastWalk = looksSinceLastWalk + 1
-            stepnum = stepnum + 1
-        arrLooksBetweenWalk.append(looksBetweenWalks)
-        looksBetweenWalks = []
-        arrFitness.append(fitness)
-        fitness = []
-        nsim = nsim + 1
-    nk = nk + 1
-    kLooksBetweenWalk.append(arrLooksBetweenWalk)
-    arrLooksBetweenWalk = []
-    kFitness.append(arrFitness)
-    arrFitness = []
+colors = [Color("Black"), Color("Orange"), Color("Red"), Color("Green")]
+namesToPlot = ['Evolved', 'Random Walker', 'Steepest Hill Climber', 'Alternating SHC/RW']
+toPlot = []
+toPlot.append(kArrayF)
+toPlot.append(kpurewalk)
+toPlot.append(kSHC)
+toPlot.append(kAlternate)
 
-# print(kLooksBetweenWalk[0][0])
-
-
-for numInvestigating in range(len(kFitness)):
-    looksAtSteps = []
-    fitnessAtSteps = []
-    simInvestigating = kLooksBetweenWalk[numInvestigating]
-    fitInvestigating = kFitness[numInvestigating]
-
-    maxNumOfWalks = 0
-    for sim in simInvestigating:
-        # if(len(sim) != 10):
-        #     print(sim)
-        if(len(sim) > maxNumOfWalks):
-            maxNumOfWalks = len(sim)
-
-    for i in range(maxNumOfWalks):
-        looksAtSteps.append([])
-        fitnessAtSteps.append([])
-
-    for sim in simInvestigating:
-        for i in range(maxNumOfWalks):
-            if(i < len(sim)):
-                looksAtSteps[i].append(sim[i])
-                fitnessAtSteps[i].append(fitInvestigating[simInvestigating.index(sim)][i])
-            else:
-                looksAtSteps[i].append(0)
-                fitnessAtSteps[i].append(0)
-
-
-
-    # print(len(looksAtSteps))
-
+index = 0
+for plot in toPlot:
     plot_error = "standard_error"
     #plot_error = "standard_deviation"
     mean_values = []
     lower_errors = []
     upper_errors = []
 
+    print(namesToPlot[index] + " plotting...")
 
-    n = simsPerK
-    xaxis = np.arange(0, maxNumOfWalks, 1)
+    xaxis = np.arange(0, len(plot), 1)
     # print(maxNumOfWalks)
-    for i in range(len(looksAtSteps)):
-        mean = statistics.mean(looksAtSteps[i])
+    finalFits = []
+    for i in range(len(plot)):
+        finalFits.append([])
+
+    for i in range(0, len(plot)):
+        for j in range(0, len(plot[i])):
+            finalFits[i].append(plot[i][j][len(plot[i][j])-1])
+
+    n = len(finalFits * 100) #1000 is from numTestsForComparison from java code
+
+    for i in range(len(finalFits)):
+        mean = statistics.mean(finalFits[i])
         mean_values.append(mean)
 
-        std = statistics.stdev(looksAtSteps[i])
+        std = statistics.stdev(finalFits[i])
         if plot_error == "standard_error":
             error = std/np.sqrt(n)
             lower_errors.append( mean - error )
@@ -293,54 +251,35 @@ for numInvestigating in range(len(kFitness)):
         else:
             print("plot_error must be standard_error or standard_deviation")
             exit(1)
-
-    mean_values2 = []
-    lower_errors2 = []
-    upper_errors2 = []
-
-    for i in range(len(fitnessAtSteps)):
-        mean = statistics.mean(fitnessAtSteps[i])
-        mean_values2.append(mean)
-
-        std = statistics.stdev(fitnessAtSteps[i])
-        if plot_error == "standard_error":
-            error = std/np.sqrt(n)
-            lower_errors2.append( mean - error )
-            upper_errors2.append( mean + error )
-        elif plot_error == "standard_deviation":
-            lower_errors2.append( mean - std )
-            upper_errors2.append( mean + std )
-        else:
-            print("plot_error must be standard_error or standard_deviation")
-            exit(1)
-
-    n = simsPerK
-    xaxis2 = np.arange(0, maxNumOfWalks, 1)
-
     # for i in range(l)
                 
     # print(looksBetweenWalksPerSim)
-    fig, ax = plt.subplots()
-    ax2 = ax.twinx()
-    plt.title("Number of Looks Between Walks at K=" + str(numInvestigating))
 
-    leg1 = ax.plot(xaxis, mean_values, color="red", label="num looks between walks" )
-    legerror1 = ax.fill_between(xaxis, lower_errors, upper_errors, alpha=0.25, facecolor="red", label="num looks between walks error")
+    leg1 = ax.plot(xaxis, mean_values, color = colors[index].hex, label = namesToPlot[index])
+    legerror1 = ax.fill_between(xaxis, lower_errors, upper_errors, alpha=0.25, color = colors[index].hex)
 
-    leg2 = ax2.plot(xaxis2, mean_values2, color="blue", label="fitness" )
-    legerror2 = ax2.fill_between(xaxis2, lower_errors2, upper_errors2, alpha=0.25, facecolor="blue", label="fitness error")
+    index = index + 1
 
-    # # for arr in looksBetweenWalksPerSim:
-    # #     ax.plot(arr, color="blue", alpha=0.1)
+ax.set_xlabel('K-Value')
+ax.set_ylabel('Average Final Fitness')
+ax.legend(loc = 'upper right')
 
-    ax.set_xlabel('Walk Number')
-    ax.set_ylabel('Average Looks Before Walk')
-    ax.legend(loc = 'upper left')
+# ax.set_ylim([0, max(mean_values) + 0.1])
+# ax2.set_ylim([0, 1])
+# ax2.legend(loc = 'upper right')
+fig.set_size_inches(5,5 )  
 
-    ax.set_ylim([0, max(mean_values) + 1])
-    ax2.set_ylim([0, 1])
-    ax2.legend(loc = 'upper right')
 
-    plt.xticks(np.arange(0, maxNumOfWalks, 2))
-    plt.savefig("plotOutput/"+"k=" + str(numInvestigating) + ".png")
-    # plt.show()
+SMALL_SIZE = 10
+MEDIUM_SIZE = 12
+BIGGER_SIZE = 13
+
+plt.rc('font', size=BIGGER_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
+plt.savefig("plotOutput/"+"fitnesses.png", dpi=300, bbox_inches='tight')

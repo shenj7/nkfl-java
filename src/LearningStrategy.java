@@ -29,6 +29,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	ArrayList<Integer> lookedLocations = new ArrayList<Integer>();
 	public double[] fitnessArray; //fitnesses at each step
 	public FitnessLandscape landscape; // This LearningStrategy's NKFL
+	public static boolean usingWait = false;
 	
 	public int[] phenotype; //
 	public double phenotypeFitness; // the current fitness of the genotype
@@ -36,7 +37,22 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	public int[] genotype;
 	public double genotypeFitness; // save this data so we don't have to recompute it every time we reset
 	
+	public boolean ignoreWalkNumber = false;
 	boolean strategyExecuted = false;
+	
+	public LearningStrategy(FitnessLandscape landscape, ArrayList<Step> strategy, int[] genotype, boolean ignoreWalkNumber) {
+		this.ignoreWalkNumber = ignoreWalkNumber;
+		this.landscape = landscape;
+		this.strategy = new ArrayList<Step>();
+		
+		for(Step s : strategy)
+		{
+			this.strategy.add(s);
+		}
+
+		initializeArrays(genotype);
+	}
+	
 	/**
 	 * Initializes a LearningStrategy with the specified strategyArray
 	 * 
@@ -87,7 +103,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		fitnessArray = new double[strategy.size()];
 		fitnessArray[0] = this.genotypeFitness;
 		
-		if(setNumberOfWalks != 0)
+		if(setNumberOfWalks != 0 && !ignoreWalkNumber)
 		{
 			enforceNumberOfWalks();
 		}
@@ -123,7 +139,15 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	
 	//Not sure if this is the best implementation
 	public Step getRandomStep() {
-		int roll = SeededRandom.rnd.nextInt(2);
+		int roll;
+		if(!usingWait)
+		{
+			roll = SeededRandom.rnd.nextInt(2);
+		}
+		else
+		{
+			roll = SeededRandom.rnd.nextInt(3);
+		}
 		if(roll == 0)
 		{
 			return new WalkStep();
@@ -131,6 +155,10 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 		else if(roll == 1)
 		{
 			return new LookStep();
+		}
+		else if(roll == 2)
+		{
+			return new WaitStep();
 		}
 		else
 		{
@@ -222,7 +250,8 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 			childStrategy.add(step);
 		}
 		
-		return new LearningStrategy(landscape, childStrategy, NDArrayManager.copyArray1d(genotype));
+		LearningStrategy child = new LearningStrategy(landscape, childStrategy, NDArrayManager.copyArray1d(genotype), ignoreWalkNumber);
+		return child;
 	}
 	
 	public LearningStrategy getMutatedChild(double mutationRate) {
@@ -234,7 +263,7 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 			childStrategy.add(step);
 		}
 		
-		LearningStrategy child = new LearningStrategy(landscape, childStrategy, NDArrayManager.copyArray1d(genotype));
+		LearningStrategy child = new LearningStrategy(landscape, childStrategy, NDArrayManager.copyArray1d(genotype), ignoreWalkNumber);
 		child.mutate(mutationRate);
 		return child;
 	}
@@ -265,7 +294,10 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 				this.mutateStep(i);
 			}
 		}
-		enforceNumberOfWalks();
+		if(!ignoreWalkNumber)
+		{
+			enforceNumberOfWalks();
+		}
 	}
 	
 	/**
@@ -275,13 +307,43 @@ public class LearningStrategy implements Comparable<LearningStrategy>{
 	
 	//Pretty sure this is a bad solution, but with classes we don't have another option...
 	public void mutateStep(int i) {
+		int roll = 0;
+		if(usingWait)
+		{
+		    roll = SeededRandom.rnd.nextInt(2);
+		}
 		if(strategy.get(i).getStepName() == "Look")
 		{
-			strategy.set(i, new WalkStep());
+			if(roll == 0)
+			{
+				strategy.set(i, new WalkStep());
+			}
+			else
+			{
+				strategy.set(i, new WaitStep());
+			}
 		}
 		else if(strategy.get(i).getStepName() == "Walk")
 		{
-			strategy.set(i, new LookStep());
+			if(roll == 0)
+			{
+				strategy.set(i, new LookStep());
+			}
+			else
+			{
+				strategy.set(i, new WaitStep());
+			}
+		}
+		else if(strategy.get(i).getStepName() == "Wait")
+		{
+			if(roll == 0)
+			{
+				strategy.set(i, new WalkStep());
+			}
+			else
+			{
+				strategy.set(i, new LookStep());
+			}
 		}
 		else
 		{

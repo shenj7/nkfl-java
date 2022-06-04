@@ -7,11 +7,12 @@ from matplotlib import cm
 # from colorspacious import cspace_converter
 from collections import OrderedDict
 from tkinter.filedialog import askopenfilename
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
 import ExperimentStorer
 import GraphMaker
 import statistics
-
+print (mpl.__version__)
 cmaps=OrderedDict()
 filename = askopenfilename()
 
@@ -236,7 +237,21 @@ for k in kArrayS:
     arrFitness = []
 
 # print(kLooksBetweenWalk[0][0])
+fig, axs = plt.subplots(2,4)
+# fig.suptitle("Look Distribution and Fitness at Each Walk across K values")
+# axs2 = []
+# for i in axs:
+#     axs2.append(i.twinx())
 
+# plt.gca().set_title("Number of Looks Between Walks")
+xindex = 0
+maxx = 4
+yindex = 0
+maxy = 2
+
+tag = 0
+
+ksToPlot = [0, 2, 4, 6, 8, 10, 12, 14]
 
 for numInvestigating in range(len(kFitness)):
     looksAtSteps = []
@@ -264,7 +279,8 @@ for numInvestigating in range(len(kFitness)):
                 looksAtSteps[i].append(0)
                 fitnessAtSteps[i].append(0)
 
-
+    if(numInvestigating not in ksToPlot):
+        continue
 
     # print(len(looksAtSteps))
 
@@ -275,7 +291,7 @@ for numInvestigating in range(len(kFitness)):
     upper_errors = []
 
 
-    n = simsPerK
+    n = simsPerK/5
     xaxis = np.arange(0, maxNumOfWalks, 1)
     # print(maxNumOfWalks)
     for i in range(len(looksAtSteps)):
@@ -284,7 +300,7 @@ for numInvestigating in range(len(kFitness)):
 
         std = statistics.stdev(looksAtSteps[i])
         if plot_error == "standard_error":
-            error = std/np.sqrt(n)
+            error = std/len(looksAtSteps) #don't include the stdev of all sims, just the one we're looking at
             lower_errors.append( mean - error )
             upper_errors.append( mean + error )
         elif plot_error == "standard_deviation":
@@ -304,7 +320,7 @@ for numInvestigating in range(len(kFitness)):
 
         std = statistics.stdev(fitnessAtSteps[i])
         if plot_error == "standard_error":
-            error = std/np.sqrt(n)
+            error = std/len(looksAtSteps) 
             lower_errors2.append( mean - error )
             upper_errors2.append( mean + error )
         elif plot_error == "standard_deviation":
@@ -320,27 +336,74 @@ for numInvestigating in range(len(kFitness)):
     # for i in range(l)
                 
     # print(looksBetweenWalksPerSim)
-    fig, ax = plt.subplots()
-    ax2 = ax.twinx()
-    plt.title("Number of Looks Between Walks at K=" + str(numInvestigating))
 
-    leg1 = ax.plot(xaxis, mean_values, color="red", label="num looks between walks" )
-    legerror1 = ax.fill_between(xaxis, lower_errors, upper_errors, alpha=0.25, facecolor="red", label="num looks between walks error")
-
-    leg2 = ax2.plot(xaxis2, mean_values2, color="blue", label="fitness" )
-    legerror2 = ax2.fill_between(xaxis2, lower_errors2, upper_errors2, alpha=0.25, facecolor="blue", label="fitness error")
+    if(tag == 0):
+        leg1 = axs[yindex,xindex].plot(xaxis, mean_values, color="red", label="Looks")
+        leg1 = axs[yindex,xindex].plot([0,0], [0,0], color="blue", label="Fitness")
+        legerror1 = axs[yindex,xindex].fill_between(xaxis, lower_errors, upper_errors, alpha=0.25, facecolor="red")
+        axs2 = axs[yindex,xindex].twinx()
+        leg2 = axs2.plot(xaxis2, mean_values2, color="blue", label="Fitness" )
+        legerror2 = axs2.fill_between(xaxis2, lower_errors2, upper_errors2, alpha=0.25, facecolor="blue")
+        axs[xindex,yindex].legend(loc = 'upper left')
+        tag = 1
+    else:
+        leg1 = axs[yindex,xindex].plot(xaxis, mean_values, color="red")
+        legerror1 = axs[yindex,xindex].fill_between(xaxis, lower_errors, upper_errors, alpha=0.25, facecolor="red")
+        axs2 = axs[yindex,xindex].twinx()
+        leg2 = axs2.plot(xaxis2, mean_values2, color="blue")
+        legerror2 = axs2.fill_between(xaxis2, lower_errors2, upper_errors2, alpha=0.25, facecolor="blue")
 
     # # for arr in looksBetweenWalksPerSim:
     # #     ax.plot(arr, color="blue", alpha=0.1)
 
-    ax.set_xlabel('Walk Number')
-    ax.set_ylabel('Average Looks Before Walk')
-    ax.legend(loc = 'upper left')
+    
+    # axs[xindex,yindex].legend(loc = 'upper left')
+    axs[yindex,xindex].set_ylim([0, 11])
+    axs2.set_ylim([0, 1])
+    # axs2.legend(loc = 'upper right')
+    plt.title("K = " + str(numInvestigating))
 
-    ax.set_ylim([0, max(mean_values) + 1])
-    ax2.set_ylim([0, 1])
-    ax2.legend(loc = 'upper right')
+    axs[yindex,xindex].yaxis.set_ticks([])
+    if(xindex == 0):
+        axs[yindex, xindex].yaxis.set_ticks([0, 2, 4, 6, 8, 10])
+        axs[yindex, xindex].set_ylabel("Looks Before Walk")
+        
 
-    plt.xticks(np.arange(0, maxNumOfWalks, 2))
-    plt.savefig("plotOutput/"+"k=" + str(numInvestigating) + ".png")
+    plt.xticks([])
+    if(yindex == maxy-1):
+        plt.xticks([0, 2, 4, 6, 8])
+        minorLocator = MultipleLocator(1)
+        axs[yindex, xindex].xaxis.set_minor_locator(minorLocator)
+        axs[yindex, xindex].set_xlabel("Walk Number")
+    
+    plt.yticks([])
+    if(xindex == maxx-1):
+        plt.yticks([0, 0.25, 0.5, 0.75, 1])
+        axs2.set_ylabel("Fitness at Walk")
+
+    xindex = xindex + 1
+    if(xindex == maxx):
+        xindex = 0
+        yindex = yindex + 1
+# axs.set_xlabel('Walk Number')
+# plt.set_ylabel('Average Looks Before Walk')
+# plt.xticks(np.arange(0, maxNumOfWalks, 2))
+
+fig.set_size_inches(10,5 )  
+
+# fig.legend(loc = 'upper right')
+
+SMALL_SIZE = 10
+MEDIUM_SIZE = 12
+BIGGER_SIZE = 13
+
+plt.rc('font', size=BIGGER_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+fig.tight_layout()
+plt.savefig("plotOutput/"+"some ks.png")
     # plt.show()

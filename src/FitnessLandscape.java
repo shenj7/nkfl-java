@@ -270,7 +270,7 @@ public class FitnessLandscape {
 
 		for(int x = 0; x < numTests; x++)
 		{
-			strategies.add(new LearningStrategy(this, strategy, startingLocation));
+			strategies.add(new LearningStrategy(this, strategy, startingLocation, true));
 		}
 		
 		StrategyGeneration gen = new StrategyGeneration(strategies);

@@ -1,5 +1,5 @@
 import csv
-import os
+import os, glob
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -7,12 +7,14 @@ from matplotlib import cm
 # from colorspacious import cspace_converter
 from collections import OrderedDict
 from tkinter.filedialog import askopenfilename
-
+from colour import Color
+ 
 import ExperimentStorer
 import GraphMaker
 import statistics
 
 cmaps=OrderedDict()
+#ask the user to sleect the folder containing the experiments
 filename = askopenfilename()
 
 kValues = []
@@ -149,7 +151,7 @@ kSHC.append(arraySHC)
 kAlternate.append(arrayAlternate)
 kBalance.append(arrayBalance)
 
-print(len(kArrayF[0]))
+print(len(kArrayF[0][0]))
 
 simsPerK = len(kArrayS[0])
 stepsPerSim = len(kArrayS[0][0])
@@ -165,46 +167,6 @@ fitness = []
 numtot = 0
 nk = 0
 
-#arrange out-of-order Ks
-SSorted= []
-FSorted= []
-PureWalkSorted = []
-SHCSorted = []
-AlternateSorted = []
-BalancedSorted = []
-for i in range(len(kValues)):
-    SSorted.append([])
-    FSorted.append([])
-    PureWalkSorted.append([])
-    SHCSorted.append([])
-    AlternateSorted.append([])
-    BalancedSorted.append([])
-
-
-for i in range(len(kValues)):
-    SSorted[kValues[i]] = kArrayS[i]
-    FSorted[kValues[i]] = kArrayF[i]
-    PureWalkSorted[kValues[i]] = kpurewalk[i]
-    SHCSorted[kValues[i]] = kSHC[i]
-    AlternateSorted[kValues[i]] = kAlternate[i]
-    BalancedSorted[kValues[i]] = kBalance[i]
-
-kArrayS = SSorted
-kArrayF = FSorted
-kpurewalk = PureWalkSorted
-kSHC = SHCSorted
-kAlternate = AlternateSorted
-kBalance = BalancedSorted
-
-kLooksBetweenWalk = []
-arrLooksBetweenWalk = []
-looksBetweenWalks = []
-
-fitness = []
-arrFitness = []
-kFitness = []
-
-numRW = 0
 numtot = 0
 nk = 0
 for k in kArrayS:
@@ -216,16 +178,16 @@ for k in kArrayS:
             if(step == 'Walk'):
                 numtot = numtot + 1
                 if(looksSinceLastWalk == 0):
-                    numRW = numRW + 1
-                looksBetweenWalks.append(looksSinceLastWalk)
+                    RWSatWalks.append(1)
+                else:
+                    RWSatWalks.append(0)
                 looksSinceLastWalk = 0
-                # print(str(nk) + " " + str(nsim) + " " + str(stepnum))
                 fitness.append(kArrayF[nk][nsim][stepnum])
             else:
                 looksSinceLastWalk = looksSinceLastWalk + 1
             stepnum = stepnum + 1
-        arrLooksBetweenWalk.append(looksBetweenWalks)
-        looksBetweenWalks = []
+        arrLooksBetweenWalk.append(RWSatWalks)
+        RWSatWalks = []
         arrFitness.append(fitness)
         fitness = []
         nsim = nsim + 1
@@ -235,15 +197,119 @@ for k in kArrayS:
     kFitness.append(arrFitness)
     arrFitness = []
 
+kDoubleLooksBetweenWalk = []
+arrDoubleLooksBetweenWalk = []
+DoubleRWSatWalks = []
+
+for k in kLooksBetweenWalk:
+    for sim in k:
+        prevstep = -1
+        for step in sim:
+            if(step == 1 and prevstep == 1):
+                DoubleRWSatWalks.append(1)
+            else:
+                DoubleRWSatWalks.append(0)
+            prevstep = step
+        arrDoubleLooksBetweenWalk.append(DoubleRWSatWalks)
+        DoubleRWSatWalks = []
+    kDoubleLooksBetweenWalk.append(arrDoubleLooksBetweenWalk)
+    arrDoubleLooksBetweenWalk = []
+
+#arrange out-of-order Ks
+SSorted= []
+FSorted= []
+PureWalkSorted = []
+SHCSorted = []
+AlternateSorted = []
+BalancedSorted = []
+kSingleLooksSorted = []
+kDoubleLooksSorted = []
+kValuesSorted = []
+
+for i in range(len(kValues)):
+    SSorted.append([])
+    FSorted.append([])
+    PureWalkSorted.append([])
+    SHCSorted.append([])
+    AlternateSorted.append([])
+    BalancedSorted.append([])
+    kSingleLooksSorted.append([])
+    kDoubleLooksSorted.append([])
+    kValuesSorted.append([])
+
+
+for i in range(len(kValues)):
+    SSorted[kValues[i]] = kArrayS[i]
+    FSorted[kValues[i]] = kArrayF[i]
+    PureWalkSorted[kValues[i]] = kpurewalk[i]
+    SHCSorted[kValues[i]] = kSHC[i]
+    AlternateSorted[kValues[i]] = kAlternate[i]
+    BalancedSorted[kValues[i]] = kBalance[i]
+    kSingleLooksSorted[kValues[i]] = kLooksBetweenWalk[i]
+    kDoubleLooksSorted[kValues[i]] = kDoubleLooksBetweenWalk[i]
+    kValuesSorted[kValues[i]] = kValues[i]
+
+kArrayS = SSorted
+kArrayF = FSorted
+kpurewalk = PureWalkSorted
+kSHC = SHCSorted
+kAlternate = AlternateSorted
+kBalance = BalancedSorted
+kLooksBetweenWalk = kSingleLooksSorted
+kDoubleLooksBetweenWalk = kDoubleLooksSorted
+kValues = kValuesSorted
+
+# kLooksBetweenWalk = kDoubleLooksBetweenWalk
+
 # print(kLooksBetweenWalk[0][0])
 
+fig, ax = plt.subplots()
+# ax2 = ax.twinx()
+# plt.title("Frequency of Random Walk at Different Walk Steps")
 
+# kValuesToAnalyze = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+kValuesToAnalyze = [0, 2, 4, 6, 8, 10, 12, 14]
+# #make an array of k colors
+kcolorarray = []
+for thiskvalue in range(len(kValues)):
+    kcolorarray.append(cm.CMRmap(1.7*thiskvalue/len(kValues)))
+
+#Old
+# color1 = Color('brown')
+# color2 = Color('blue')
+# color3 = Color('red')
+
+
+# fhalf = list(color1.range_to(color2, 4))
+# shalf = list(color2.range_to(color3, 4))
+
+# kcolorarray.append(Color('black'))
+# for i in range(4):
+#     kcolorarray.append(fhalf[i])
+# for i in range(3):
+#     kcolorarray.append(shalf[1+i])
+
+# kcolorarray = list(color1.range_to(color2, len(kValuesToAnalyze)))
+
+#New
+# kcolorarray = np.linspace(0, 1, 7)
+# kcolorarray = np.vstack((kcolorarray, kcolorarray))
+
+# kcolorarray[0] = Color('black')
+
+kindex = 0
+graphIndex = 0
 for numInvestigating in range(len(kFitness)):
+    kValue = kValues[kindex]
+    kindex = kindex + 1
     looksAtSteps = []
     fitnessAtSteps = []
     simInvestigating = kLooksBetweenWalk[numInvestigating]
     fitInvestigating = kFitness[numInvestigating]
 
+    if(kValue not in kValuesToAnalyze):
+        continue
+    
     maxNumOfWalks = 0
     for sim in simInvestigating:
         # if(len(sim) != 10):
@@ -255,14 +321,16 @@ for numInvestigating in range(len(kFitness)):
         looksAtSteps.append([])
         fitnessAtSteps.append([])
 
+    index = 0
     for sim in simInvestigating:
         for i in range(maxNumOfWalks):
             if(i < len(sim)):
                 looksAtSteps[i].append(sim[i])
-                fitnessAtSteps[i].append(fitInvestigating[simInvestigating.index(sim)][i])
+                fitnessAtSteps[i].append(fitInvestigating[index][i])
             else:
                 looksAtSteps[i].append(0)
                 fitnessAtSteps[i].append(0)
+        index = index + 1
 
 
 
@@ -275,6 +343,7 @@ for numInvestigating in range(len(kFitness)):
     upper_errors = []
 
 
+
     n = simsPerK
     xaxis = np.arange(0, maxNumOfWalks, 1)
     # print(maxNumOfWalks)
@@ -284,7 +353,7 @@ for numInvestigating in range(len(kFitness)):
 
         std = statistics.stdev(looksAtSteps[i])
         if plot_error == "standard_error":
-            error = std/np.sqrt(n)
+            error = std/len(looksAtSteps) #don't include the stdev of all sims, just the one we're looking at
             lower_errors.append( mean - error )
             upper_errors.append( mean + error )
         elif plot_error == "standard_deviation":
@@ -304,7 +373,7 @@ for numInvestigating in range(len(kFitness)):
 
         std = statistics.stdev(fitnessAtSteps[i])
         if plot_error == "standard_error":
-            error = std/np.sqrt(n)
+            error = std/len(looksAtSteps) 
             lower_errors2.append( mean - error )
             upper_errors2.append( mean + error )
         elif plot_error == "standard_deviation":
@@ -320,27 +389,39 @@ for numInvestigating in range(len(kFitness)):
     # for i in range(l)
                 
     # print(looksBetweenWalksPerSim)
-    fig, ax = plt.subplots()
-    ax2 = ax.twinx()
-    plt.title("Number of Looks Between Walks at K=" + str(numInvestigating))
 
-    leg1 = ax.plot(xaxis, mean_values, color="red", label="num looks between walks" )
-    legerror1 = ax.fill_between(xaxis, lower_errors, upper_errors, alpha=0.25, facecolor="red", label="num looks between walks error")
+    leg1 = ax.plot(xaxis, mean_values, color = kcolorarray[graphIndex], label = "k = " + str(kValue)) 
+    legerror1 = ax.fill_between(xaxis, lower_errors, upper_errors, alpha=0.25, color = kcolorarray[graphIndex])
+    graphIndex = graphIndex + 1
 
-    leg2 = ax2.plot(xaxis2, mean_values2, color="blue", label="fitness" )
-    legerror2 = ax2.fill_between(xaxis2, lower_errors2, upper_errors2, alpha=0.25, facecolor="blue", label="fitness error")
+    # leg2 = ax2.plot(xaxis2, mean_values2)
+    # legerror2 = ax2.fill_between(xaxis2, lower_errors2, upper_errors2, alpha=0.25)
 
     # # for arr in looksBetweenWalksPerSim:
     # #     ax.plot(arr, color="blue", alpha=0.1)
 
-    ax.set_xlabel('Walk Number')
-    ax.set_ylabel('Average Looks Before Walk')
-    ax.legend(loc = 'upper left')
+ax.set_xlabel('Walk Number')
+ax.set_ylabel('Frequency of Random Walk')
+ax.legend(loc = 'upper right')
 
-    ax.set_ylim([0, max(mean_values) + 1])
-    ax2.set_ylim([0, 1])
-    ax2.legend(loc = 'upper right')
+fig.set_size_inches(5,5 )  
 
-    plt.xticks(np.arange(0, maxNumOfWalks, 2))
-    plt.savefig("plotOutput/"+"k=" + str(numInvestigating) + ".png")
-    # plt.show()
+
+SMALL_SIZE = 10
+MEDIUM_SIZE = 12
+BIGGER_SIZE = 13
+
+plt.rc('font', size=BIGGER_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
+# ax.set_ylim([0, max(mean_values) + 0.1])
+# ax2.set_ylim([0, 1])
+# ax2.legend(loc = 'upper right')
+
+plt.xticks(np.arange(0, maxNumOfWalks, 2))
+plt.savefig("plotOutput/"+"k=" + str(kValue) + ".png")

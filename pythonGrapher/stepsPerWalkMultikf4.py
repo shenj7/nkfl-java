@@ -149,7 +149,7 @@ kSHC.append(arraySHC)
 kAlternate.append(arrayAlternate)
 kBalance.append(arrayBalance)
 
-print(len(kArrayF[0]))
+print(len(kArrayF[0][0]))
 
 simsPerK = len(kArrayS[0])
 stepsPerSim = len(kArrayS[0][0])
@@ -219,7 +219,6 @@ for k in kArrayS:
                     numRW = numRW + 1
                 looksBetweenWalks.append(looksSinceLastWalk)
                 looksSinceLastWalk = 0
-                # print(str(nk) + " " + str(nsim) + " " + str(stepnum))
                 fitness.append(kArrayF[nk][nsim][stepnum])
             else:
                 looksSinceLastWalk = looksSinceLastWalk + 1
@@ -333,14 +332,14 @@ for numInvestigating in range(len(kFitness)):
     # # for arr in looksBetweenWalksPerSim:
     # #     ax.plot(arr, color="blue", alpha=0.1)
 
-    ax.set_xlabel('Walk Number')
-    ax.set_ylabel('Average Looks Before Walk')
-    ax.legend(loc = 'upper left')
+ax.set_xlabel('Walk Number')
+ax.set_ylabel('Looks Before Walk')
+ax.legend(loc = 'upper left')
 
-    ax.set_ylim([0, max(mean_values) + 1])
-    ax2.set_ylim([0, 1])
-    ax2.legend(loc = 'upper right')
+ax.set_ylim([0, max(mean_values) + 1])
+ax2.set_ylim([0, 1])
+ax2.legend(loc = 'upper right')
 
-    plt.xticks(np.arange(0, maxNumOfWalks, 2))
-    plt.savefig("plotOutput/"+"k=" + str(numInvestigating) + ".png")
+plt.xticks(np.arange(0, maxNumOfWalks, 2))
+plt.savefig("plotOutput/"+"k=" + str(numInvestigating) + ".png")
     # plt.show()

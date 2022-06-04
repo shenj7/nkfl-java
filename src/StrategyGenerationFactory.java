@@ -31,6 +31,56 @@ public class StrategyGenerationFactory {
 		return new StrategyGeneration(childrenStrategies);
 	}
 	
+	public static StrategyGeneration generateTruncation(StrategyGeneration parents, int numChildren, double mutationRate) {
+		parents.sortStrategies();
+		
+		ArrayList<LearningStrategy> childrenStrategies = new ArrayList<LearningStrategy>();
+		
+		int numSurvivors = parents.getNumStrategies() - numChildren;
+		
+		for(int i = 0; i < numSurvivors; i++)//Add the survivors to the childrenStrategies
+		{
+			childrenStrategies.add(parents.getDirectChild(i));
+		}
+		
+		for(int i = numSurvivors; i < parents.getNumStrategies(); i++)
+		{
+			//Truncate
+			//Random truncation index
+			int truncationIndex = SeededRandom.rnd.nextInt(parents.strategyLength);
+			LearningStrategy parent1 = parents.getStrategyAtIndex(SeededRandom.rnd.nextInt(numSurvivors));
+			LearningStrategy parent2 = parents.getStrategyAtIndex(SeededRandom.rnd.nextInt(numSurvivors));//It's possible to get the same parent, but that's okay. Any decent sample size should mitigate that problem.
+			LearningStrategy newChild = StrategyGenerationFactory.truncateParents(parent1, parent2, truncationIndex);
+			childrenStrategies.add(newChild);
+		}
+		
+		StrategyGeneration childGeneration = new StrategyGeneration(childrenStrategies);
+		return childGeneration;
+	}
+	
+	private static LearningStrategy truncateParents(LearningStrategy p1, LearningStrategy p2, int truncateIndex)
+	{
+		int stratLength = p1.getStrategyLength();
+		if(stratLength != p2.getStrategyLength())
+		{
+			System.err.println("Cannot truncate different length parents");
+			return null;
+		}
+		
+		ArrayList<Step> childStrategyArray = new ArrayList<Step>();
+		
+		for(int i = 0; i < truncateIndex; i++)
+		{
+			childStrategyArray.add(p1.strategy.get(i));
+		}
+		for(int i = truncateIndex; i < stratLength; i++)
+		{
+			childStrategyArray.add(p2.strategy.get(i));
+		}
+		
+		return new LearningStrategy(p1.landscape, childStrategyArray, p1.genotype);
+	}
+	
 //	public static StrategyGeneration generateTruncation(StrategyGeneration parents, int numChildren, int[] startingLocation) {
 //		parents.sortStrategies();
 //		
@@ -59,28 +109,7 @@ public class StrategyGenerationFactory {
 //	}
 //	
 //	//TruncateIndex will be where p2 starts (so [0,0,0] and [1,1,1] truncated at 1 = [0,1,1])
-//	private static LearningStrategy truncateParents(LearningStrategy p1, LearningStrategy p2, int truncateIndex)
-//	{
-//		int stratLength = p1.getStrategyLength();
-//		if(stratLength != p2.getStrategyLength())
-//		{
-//			System.err.println("Cannot truncate different length parents");
-//			return null;
-//		}
-//		
-//		int[] childStrategyArray = new int[stratLength];
-//		
-//		for(int i = 0; i < truncateIndex; i++)
-//		{
-//			childStrategyArray[i] = p1.getStepAtIndex(i);
-//		}
-//		for(int i = truncateIndex; i < stratLength; i++)
-//		{
-//			childStrategyArray[i] = p2.getStepAtIndex(i);
-//		}
-//		
-//		return new LearningStrategy(p1.landscape, childStrategyArray, p1.getHillClimbSteepest());
-//	}
+
 	
 //	public static StrategyGeneration generateRankedExponential(StrategyGeneration parents, int numChildren, int[] startingLocation) {
 //		ArrayList<LearningStrategy> childrenStrategies = new ArrayList<LearningStrategy>();

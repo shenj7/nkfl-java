@@ -11,19 +11,21 @@ public class ExperimentRunner {
 	
 	public static void main(String[] args) {
 //		//Strategy Parameters
-		int strategyLength = 50;
+		int strategyLength = 200;
 		int sensitivity = 1;
 		int maxSensitivity = 1; //Set this equal to sensitivity for a single sensitiviry run
 		int sensitivityInceremet = 1;
 		
 		//Set to 0 if you don't want to control
-		int numberOfWalks = 10;
+		int numberOfWalks = 40;
 		LearningStrategy.setNumberOfWalks = numberOfWalks;
+		LearningStrategy.usingWait = false;
 
 		//Landscape Parameters
 		int n = 15;
-		int k = 0;
-		int maxk = 15; //Set this equal to k for a single k run
+		int setk = 14;
+		int k = setk;
+		int maxk = setk; //Set this equal to k for a single k run
 		int kincrement = 1;
 		
 		//Evolution Parameters
@@ -34,13 +36,13 @@ public class ExperimentRunner {
 		double mutationPercentage = 2;
 		
 		//Seed parameters
-		long seed = 448; //Set Seed
+		long seed = 500; //Set Seed
 //		long seed = SeededRandom.rnd.nextInt(); //Random seed
 		SeededRandom.rnd.setSeed(seed);
 
 		//Data Reporting Parameters
-		int incrementCSVoutput = 10;
-		String experimentName = "Experiment_" + seed + "_" + selectionType;
+		int incrementCSVoutput = 50;
+		String experimentName = "Experiment_" + seed + "_" + selectionType + "k=" + k;
 		PrintWriter csvWriter;
 		File csvFile = new File(experimentName);
 
@@ -51,10 +53,8 @@ public class ExperimentRunner {
 		int runs = 1;
 		int strategyRuns = 25;
 		
-		if(selectionType.contains("ranked"))
-		{
-			childrenPercentage = 100;
-		}
+		
+		
 		
 //		//Setup CSV writer
 //		try {
@@ -80,11 +80,32 @@ public class ExperimentRunner {
 		}
 		strats.put("PureWalk", pureWalk);
 		
+//		ArrayList<Step> alternateLookWalk = new ArrayList<Step>();
+//		for(int i = 0; i < strategyLength/2; i++)
+//		{
+//			alternateLookWalk.add(new LookStep());
+//			alternateLookWalk.add(new WalkStep());
+//		}
+//		strats.put("AlternateLookWalk", alternateLookWalk);
+//		
+		//New, smarter alternate
 		ArrayList<Step> alternateLookWalk = new ArrayList<Step>();
-		for(int i = 0; i < strategyLength/2; i++)
+		int looksperwalka = (int) Math.floor((n * 1.0/sensitivity));
+		
+		while(alternateLookWalk.size() + looksperwalka*2 + 3 < strategyLength)
 		{
-			alternateLookWalk.add(new LookStep());
 			alternateLookWalk.add(new WalkStep());
+			for(int j = 0; j < looksperwalka; j++)
+			{
+				alternateLookWalk.add(new LookStep());
+			}
+			alternateLookWalk.add(new WalkStep());
+			for(int j = 0; j < looksperwalka; j++)
+			{
+				alternateLookWalk.add(new LookStep());
+			}
+			alternateLookWalk.add(new WalkStep());
+			
 		}
 		strats.put("AlternateLookWalk", alternateLookWalk);
 		
@@ -100,6 +121,23 @@ public class ExperimentRunner {
 			SHC.add(new WalkStep());
 		}
 		strats.put("Steep Hill Climb", SHC);
+		
+		if(numberOfWalks != 0)
+		{
+			ArrayList<Step> balanced = new ArrayList<Step>();
+			int avgLooksPerWalk = (strategyLength - numberOfWalks) / numberOfWalks;
+			
+			for(int i = 0; i < numberOfWalks; i++)
+			{
+				for(int j = 0; j < avgLooksPerWalk; j++)
+				{
+					balanced.add(new LookStep());
+				}
+				balanced.add(new WalkStep());
+			}
+			
+			strats.put("Balanced", balanced);
+		}
 		
 		double numSimsTotal = (((maxk-k)/kincrement)+1) * (((maxSensitivity-sensitivity)/sensitivityInceremet)+1) * simulations * starts * runs;
 		double numSim = 0;

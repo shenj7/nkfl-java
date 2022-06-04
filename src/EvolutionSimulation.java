@@ -67,10 +67,10 @@ public class EvolutionSimulation {
 			{
 				nextGen = StrategyGenerationFactory.generateMutation(generations.get(generations.size() - 1), childrenPerGeneration, mutationPercentage);
 			}
-//			if(evolutionType.toLowerCase().equals("truncation"))
-//			{
-//				nextGen = StrategyGenerationFactory.generateTruncation(generations.get(generations.size() - 1), childrenPerGeneration, startingLocation);
-//			}
+			else if(evolutionType.toLowerCase().equals("truncation"))
+			{
+				nextGen = StrategyGenerationFactory.generateTruncation(generations.get(generations.size() - 1), childrenPerGeneration, mutationPercentage);
+			}
 //			else if(evolutionType.toLowerCase().equals("ranked_linear"))
 //			{
 //				nextGen = StrategyGenerationFactory.generateRankedLinear(generations.get(generations.size() - 1), childrenPerGeneration, startingLocation);
@@ -130,6 +130,7 @@ public class EvolutionSimulation {
 		for(String name : comparisonStrategies.keySet())
 		{
 			StrategyGeneration tested = landscape.testStrategyOnLandscape(comparisonStrategies.get(name), numTestsForComparison, startingLocation);
+//			System.out.println(name + ", " + tested.getBestStrategyOfGeneration().strategy);
 			
 			csvWriter.print("\n" + name);
 			csvWriter.print("\n" + StrategyRowHeader);

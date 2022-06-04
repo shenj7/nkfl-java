@@ -15,8 +15,6 @@ import statistics
 cmaps=OrderedDict()
 filename = askopenfilename()
 
-kValues = []
-
 kArrayS = []
 kArrayF = []
 
@@ -26,28 +24,10 @@ arrayF = []
 currS = []
 currF = []
 
-kpurewalk = []
-kSHC = []
-kAlternate = []
-kBalance = []
-
-arrayPureWalk = []
-arraySHC = []
-arrayAlternate = []
-arrayBalance = []
-
-
-currPureWalk = []
-currSHC = []
-currAlternate = []
-currBalance = []
-
 topGen = '50'
 
 toSkip = 0 #skip lines
 #parse the CSV file
-
-specialStrat = "none"
 with open(filename) as csvfile:
     datareader = csv.reader(csvfile, delimiter=',')
     currentK = ""
@@ -57,25 +37,15 @@ with open(filename) as csvfile:
             continue
         elif(row[0] == "SIMULATION"):
             # print(currentK + " " + row[5] + "==" + str(currentK==row[5]))
-            specialStrat = 'none'
             if(currentK == ""):
-                currentK = int(row[5][8:])
-            if(currentK != int(row[5][8:])):
-                kValues.append(currentK)
-                currentK = int(row[5][8:])
+                currentK = row[5]
+            if(currentK != row[5]):
+                currentK = row[5]
                 # print(currentK)
                 kArrayS.append(arrayS)
                 kArrayF.append(arrayF)
-                kpurewalk.append(arrayPureWalk)
-                kSHC.append(arraySHC)
-                kAlternate.append(arrayAlternate)
-                kBalance.append(arrayBalance)
                 arrayS = []
                 arrayF = []
-                arrayPureWalk = []
-                arraySHC = []
-                arrayAlternate = []
-                arrayBalance = []
         elif(len(row)==0):
             print("finished parsing data")
             # print(row)
@@ -92,117 +62,31 @@ with open(filename) as csvfile:
             arrayS.append(currS)
             currS = []
         elif(row[0] == 'FITNESS_ROW'):
-            if(specialStrat == 'none'):
-                j=0
-                for i in row:
-                    if(i != 'FITNESS_ROW'):
-                        currF.append(float(i))
-                        j = j + 1
-                arrayF.append(currF)
-                currF = []
-            elif(specialStrat == 'PureWalk'):
-                for x in row:
-                    if(x != 'FITNESS_ROW'):
-                        currPureWalk.append(float(x))
-                arrayPureWalk.append(currPureWalk)
-                currPureWalk = []
-            elif(specialStrat == 'SHC'):
-                 for x in row:
-                    if(x != 'FITNESS_ROW'):
-                       currSHC.append(float(x))
-                 arraySHC.append(currSHC)
-                 currSHC = []
-            elif(specialStrat == 'Alternate'):
-                 for x in row:
-                    if(x != 'FITNESS_ROW'):
-                        currAlternate.append(float(x))
-                 arrayAlternate.append(currAlternate)
-                 currAlternate = []
-            elif(specialStrat == 'Balanced'):
-                 for x in row:
-                    if(x != 'FITNESS_ROW'):
-                       currBalance.append(float(x))
-                 arrayBalance.append(currBalance)
-                 currBalance = []
+            j=0
+            for i in row:
+                if(i != 'FITNESS_ROW'):
+                    currF.append(float(i))
+                    j = j + 1
+            arrayF.append(currF)
+            currF = []
         # elif(row[0] )
         elif(row[0] == 'COMPARISON_STRATEGIES'):
+            toSkip = 9
             continue
-        elif(row[0] == 'PureWalk'):
-            specialStrat = 'PureWalk'
-            toSkip = 1
-        elif(row[0] == 'Steep Hill Climb'):
-            specialStrat = 'SHC'
-            toSkip = 1
-        elif(row[0] == 'AlternateLookWalk'):
-            specialStrat = 'Alternate'
-            toSkip = 1
-        elif(row[0] == 'Balanced'):
-            specialStrat = 'Balanced'
-            toSkip = 1
-        
 #Add on the last one
 kArrayS.append(arrayS)
 kArrayF.append(arrayF)
-kValues.append(currentK)
-kpurewalk.append(arrayPureWalk)
-kSHC.append(arraySHC)
-kAlternate.append(arrayAlternate)
-kBalance.append(arrayBalance)
-
-print(len(kArrayF[0]))
 
 simsPerK = len(kArrayS[0])
 stepsPerSim = len(kArrayS[0][0])
 
 kLooksBetweenWalk = []
 arrLooksBetweenWalk = []
-RWSatWalks = []
-
-kFitness = []
-arrFitness = []
-fitness = []
-
-numtot = 0
-nk = 0
-
-#arrange out-of-order Ks
-SSorted= []
-FSorted= []
-PureWalkSorted = []
-SHCSorted = []
-AlternateSorted = []
-BalancedSorted = []
-for i in range(len(kValues)):
-    SSorted.append([])
-    FSorted.append([])
-    PureWalkSorted.append([])
-    SHCSorted.append([])
-    AlternateSorted.append([])
-    BalancedSorted.append([])
-
-
-for i in range(len(kValues)):
-    SSorted[kValues[i]] = kArrayS[i]
-    FSorted[kValues[i]] = kArrayF[i]
-    PureWalkSorted[kValues[i]] = kpurewalk[i]
-    SHCSorted[kValues[i]] = kSHC[i]
-    AlternateSorted[kValues[i]] = kAlternate[i]
-    BalancedSorted[kValues[i]] = kBalance[i]
-
-kArrayS = SSorted
-kArrayF = FSorted
-kpurewalk = PureWalkSorted
-kSHC = SHCSorted
-kAlternate = AlternateSorted
-kBalance = BalancedSorted
-
-kLooksBetweenWalk = []
-arrLooksBetweenWalk = []
 looksBetweenWalks = []
 
-fitness = []
-arrFitness = []
 kFitness = []
+arrFitness = []
+fitness = []
 
 numRW = 0
 numtot = 0
@@ -219,7 +103,6 @@ for k in kArrayS:
                     numRW = numRW + 1
                 looksBetweenWalks.append(looksSinceLastWalk)
                 looksSinceLastWalk = 0
-                # print(str(nk) + " " + str(nsim) + " " + str(stepnum))
                 fitness.append(kArrayF[nk][nsim][stepnum])
             else:
                 looksSinceLastWalk = looksSinceLastWalk + 1
@@ -315,26 +198,31 @@ for numInvestigating in range(len(kFitness)):
             exit(1)
 
     n = simsPerK
-    xaxis2 = np.arange(0, maxNumOfWalks, 1)
+    xaxis2 = np.arange(1, 1+maxNumOfWalks, 1)
 
     # for i in range(l)
                 
     # print(looksBetweenWalksPerSim)
     fig, ax = plt.subplots()
     ax2 = ax.twinx()
-    plt.title("Number of Looks Between Walks at K=" + str(numInvestigating))
+    plt.title("Number of Looks Between Walks at K=" + str(numInvestigating*2))
 
-    leg1 = ax.plot(xaxis, mean_values, color="red", label="num looks between walks" )
-    legerror1 = ax.fill_between(xaxis, lower_errors, upper_errors, alpha=0.25, facecolor="red", label="num looks between walks error")
+    leg1 = ax.violinplot(looksAtSteps)#(xaxis, mean_values, color="red", label="num looks between walks" )
+    for pc in leg1['bodies']:
+        pc.set_facecolor('red')
+        pc.set_edgecolor('black')
+        # pc.set_alpha(1)
+    # legerror1 = ax.fill_between(xaxis, lower_errors, upper_errors, alpha=0.25, facecolor="red", label="num looks between walks error")
 
     leg2 = ax2.plot(xaxis2, mean_values2, color="blue", label="fitness" )
-    legerror2 = ax2.fill_between(xaxis2, lower_errors2, upper_errors2, alpha=0.25, facecolor="blue", label="fitness error")
+    # legerror2 = ax2.fill_between(xaxis2, lower_errors2, upper_errors2, alpha=0.25, facecolor="blue", label="fitness error")
 
     # # for arr in looksBetweenWalksPerSim:
     # #     ax.plot(arr, color="blue", alpha=0.1)
 
     ax.set_xlabel('Walk Number')
-    ax.set_ylabel('Average Looks Before Walk')
+    ax.set_ylabel('Looks Before Walk')
+    ax.set_ylim([0,10])
     ax.legend(loc = 'upper left')
 
     ax.set_ylim([0, max(mean_values) + 1])
@@ -342,5 +230,4 @@ for numInvestigating in range(len(kFitness)):
     ax2.legend(loc = 'upper right')
 
     plt.xticks(np.arange(0, maxNumOfWalks, 2))
-    plt.savefig("plotOutput/"+"k=" + str(numInvestigating) + ".png")
-    # plt.show()
+    plt.savefig("plotOutput/"+"k=" + str(numInvestigating*2) + ".png")
